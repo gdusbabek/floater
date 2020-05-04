@@ -1,0 +1,3 @@
+pyserial
+RPi.GPIO
+pynmea2
