@@ -29,7 +29,7 @@ def update_gps(state):
         logging.info(f"MSG: {repr(msg)}")
         if time.time() - start_time > 10000:
             break
-    logging.debug("Leaving GPS loop")
+    logging.debug("Leaving update_gps")
 
 def update_temps(state):
     pass
