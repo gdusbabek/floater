@@ -18,11 +18,20 @@ class State(object):
         self.speed = 0.0
         self.radio_freq = 0.0
 
-def read_gps(state):
+
+def check_devices():
     pass
 
+def update_gps(state):
+    gpio.enable_gps()
+    start_time = time.time()
+    for msg in gps.collect():
+        logging.info(f"MSG: {repr(msg)}")
+        if time.time() - start_time > 10000:
+            break
+    logging.debug("Leaving GPS loop")
 
-def read_temp(state):
+def update_temps(state):
     pass
 
 
@@ -42,29 +51,30 @@ def main(args):
 
     try:
         gpio.init_pins()
+        logging.info("Pi GPIO initialized. Checking devices.")
     except:
         # not a good sign.
         logging.critical("Could not initialize GPIO. Restarting device")
         restart_pi()
 
+    check_devices()
     last_sstv = 0
-
-    state = None
+    state = State()
 
     while True:
-        loop_start = time.clock()
+        loop_start = time.time()
         try:
-            read_gps(state)
-            read_temp(state)
+            update_gps(state)
+            update_temps(state)
             send_aprs(state)
-            if (time.clock() - last_sstv) > 300:
-                last_sstv = time.clock()
+            if (time.time() - last_sstv) > 300000:
+                last_sstv = time.time()
                 send_sstv(state)
         except:
             pass
 
         # maybe take a nap.
-        loop_end = time.clock()
+        loop_end = time.time()
         sleep_time = max(0, 60 - loop_end + loop_start)
         if sleep_time > 0:
             logging.info(f"Sleeping {sleep_time}s")
@@ -110,5 +120,5 @@ if __name__ == '__main__':
         time.sleep(5)
         dra818.ptt(False)
     else:
-        # main(args)
+        main(args)
         sys.exit(0)

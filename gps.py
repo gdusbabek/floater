@@ -3,8 +3,66 @@ import time
 import string
 import pynmea2
 import traceback
+import logging
 
 DEFAULT_UART_PORT = "/dev/ttyAMA0"
+
+def collect(device=DEFAULT_UART_PORT, duration_secs=10):
+    start = time.time()
+    cur_time = start
+    uart = None
+    while cur_time - start < duration_secs:
+        if not uart:
+            uart = serial.Serial(port=device, baudrate=9600, timeout=0.5)
+        try:
+            yield next_gps_object(uart)
+            cur_time = time.time()
+        except UnicodeDecodeError:
+            logging.debug("Problem device data (not unexpected")
+            cur_time = time.time()
+            continue
+        except:
+            traceback.print_exc()
+            uart.close()
+            break
+    if uart:
+        uart.close()
+    logging.debug("Leaving gps.collect()")
+
+
+def next_gps_object(uart, timeout=2):
+    start_time = time.time()
+    cur_time = start_time
+    while True:
+        bline = uart.readline()
+        gps_data = interpret(bline)
+        if gps_data:
+            return gps_data
+        if cur_time - start_time > timeout:
+            break
+    return None
+
+def interpret(bline):
+    if len(bline.strip()) < 7:
+        return None
+    msg_type = bline[0:6].decode('utf-8')
+
+    # types with no data.
+    if msg_type in ["$GPTXT", "$GPGSA", "$GPGSV"]:
+        return None
+
+    try:
+        msg = pynmea2.parse(bline.decode('utf-8'))
+        if isinstance(msg, pynmea2.RMC) or isinstance(msg, pynmea2.VTG) or isinstance(msg, pynmea2.GGA) or isinstance(msg, pynmea2.GLL):
+            return msg
+        else:
+            logging.info(f"Unknow message: {msg_type} {repr(msg)}")
+            return None
+    except:
+        traceback.print_exc()
+        return None
+
+# TODO: Should be able to get rid of everything below here.
 
 def stream_from_file(file_path):
     with open(file_path) as fp:
