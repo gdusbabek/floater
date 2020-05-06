@@ -12,11 +12,19 @@ import dra818
 
 class State(object):
     def __init__(self):
-        self.long = 0.0
-        self.lat = 0.0
-        self.bearing = 0.0
-        self.speed = 0.0
+        self.lon = None
+        self.lat = None
+        self.ground_speed_knots = 0.0
+        self.ground_speed_kph = 0.0
+        self.timestamp = None
+        self.datestamp = None
+        self.sats = None
+        self.altitude = None
+
         self.radio_freq = 0.0
+
+    def __repr__(self):
+        return f"alt:{self.altitude} {self.lat},{self.lon} spd:{self.ground_speed_kph}({self.ground_speed_knots}) sats:{self.sats}"
 
 
 def check_devices():
@@ -24,12 +32,36 @@ def check_devices():
 
 def update_gps(state):
     gpio.enable_gps()
+    logging.info("Taking GPS reading")
     start_time = time.time()
     for msg in gps.collect():
-        logging.info(f"MSG: {repr(msg)}")
+        # logging.debug(f"MSG: {repr(msg)}")
+        if hasattr(msg, 'lat'):
+            state.lat = msg.lat
+        if hasattr(msg, 'lon'):
+            state.lon = msg.lon
+        if hasattr(msg, 'lat_dir'):
+            state.lat += msg.lat_dir
+        if hasattr(msg, 'lon_dir'):
+            state.lon += msg.lon_dir
+        if hasattr(msg, 'timestamp'):
+            state.timestamp = msg.timestamp
+        if hasattr(msg, 'datestamp'):
+            state.datestamp = msg.datestamp
+        if hasattr(msg, 'spd_over_grnd_kts'):
+            state.ground_speed_knots = msg.spd_over_grnd_kts
+        if hasattr(msg, 'spd_over_grnd_kmph'):
+            state.ground_speed_kph = msg.spd_over_grnd_kmph
+        if hasattr(msg, 'num_sats'):
+            state.sats = msg.num_sats
+        if hasattr(msg, 'altitude'):
+            state.altitude = msg.altitude
+        if hasattr(msg, 'altitude_units'):
+            state.altitude = str(state.altitude) + msg.altitude_units
+
         if time.time() - start_time > 10000:
             break
-    logging.debug("Leaving update_gps")
+    logging.debug("Done with reading.")
 
 def update_temps(state):
     pass

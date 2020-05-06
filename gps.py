@@ -11,20 +11,25 @@ def collect(device=DEFAULT_UART_PORT, duration_secs=10):
     start = time.time()
     cur_time = start
     uart = None
-    while cur_time - start < duration_secs:
+    err_count = 0
+    while cur_time - start < duration_secs and err_count < 5:
+
+        # ensure serial connection.
         if not uart:
             uart = serial.Serial(port=device, baudrate=9600, timeout=0.5)
+            if not uart:
+                raise RuntimeError("Could not open serial connection to GPS")
+
+        next_obj = None
         try:
-            yield next_gps_object(uart)
-            cur_time = time.time()
-        except UnicodeDecodeError:
-            logging.debug("Problem device data (not unexpected")
-            cur_time = time.time()
-            continue
+            next_obj = next_gps_object(uart)
         except:
+            logging.debug("problem in next_gps_object()");
             traceback.print_exc()
-            uart.close()
-            break
+        cur_time = time.time()
+        if next_obj:
+            yield next_obj
+
     if uart:
         uart.close()
     logging.debug("Leaving gps.collect()")
@@ -34,8 +39,17 @@ def next_gps_object(uart, timeout=2):
     start_time = time.time()
     cur_time = start_time
     while True:
-        bline = uart.readline()
-        gps_data = interpret(bline)
+        gps_data = None
+        try:
+            bline = uart.readline()
+            gps_data = interpret(bline)
+        except pynmea2.ParseError:
+            logging.debug("parse error. will try again.")
+            continue
+        except:
+            traceback.print_exc
+            time.sleep(0.5)
+        cur_time = time.time()
         if gps_data:
             return gps_data
         if cur_time - start_time > timeout:
@@ -51,15 +65,11 @@ def interpret(bline):
     if msg_type in ["$GPTXT", "$GPGSA", "$GPGSV"]:
         return None
 
-    try:
-        msg = pynmea2.parse(bline.decode('utf-8'))
-        if isinstance(msg, pynmea2.RMC) or isinstance(msg, pynmea2.VTG) or isinstance(msg, pynmea2.GGA) or isinstance(msg, pynmea2.GLL):
-            return msg
-        else:
-            logging.info(f"Unknow message: {msg_type} {repr(msg)}")
-            return None
-    except:
-        traceback.print_exc()
+    msg = pynmea2.parse(bline.decode('utf-8'))
+    if isinstance(msg, pynmea2.RMC) or isinstance(msg, pynmea2.VTG) or isinstance(msg, pynmea2.GGA) or isinstance(msg, pynmea2.GLL):
+        return msg
+    else:
+        logging.info(f"Unknown message: {msg_type} {repr(msg)}")
         return None
 
 # TODO: Should be able to get rid of everything below here.
