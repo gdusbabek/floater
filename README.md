@@ -9,7 +9,7 @@ Some of the code works.
 - [x] turn on radio, activate ptt
 - [x] stream gps data
 - [ ] get serious about some tests and project structure.
-- [ ] convert gps data into state
+- [x] convert gps data into state
 - [ ] generate APRS wav
 - [ ] send APRS wav
 - [ ] capture image
