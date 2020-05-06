@@ -135,9 +135,9 @@ if __name__ == '__main__':
         gpio.init_pins()
         gpio.enable_gps()
         line_count = 100
-        for line in gps.stream_from_device():
+        for msg in gps.collect():
             line_count -= 1
-            gps.debug_line(line)
+            logging.debug(repr(msg))
             if line_count <= 0:
                 break
     elif args.test_vhf:

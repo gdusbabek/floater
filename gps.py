@@ -22,7 +22,7 @@ def collect(device=DEFAULT_UART_PORT, duration_secs=10):
 
         next_obj = None
         try:
-            next_obj = next_gps_object(uart)
+            next_obj = _next_gps_object(uart)
         except:
             logging.debug("problem in next_gps_object()");
             traceback.print_exc()
@@ -35,14 +35,14 @@ def collect(device=DEFAULT_UART_PORT, duration_secs=10):
     logging.debug("Leaving gps.collect()")
 
 
-def next_gps_object(uart, timeout=2):
+def _next_gps_object(uart, timeout=2):
     start_time = time.time()
     cur_time = start_time
     while True:
         gps_data = None
         try:
             bline = uart.readline()
-            gps_data = interpret(bline)
+            gps_data = _interpret_gps_line(bline)
         except pynmea2.ParseError:
             logging.debug("parse error. will try again.")
             continue
@@ -56,7 +56,7 @@ def next_gps_object(uart, timeout=2):
             break
     return None
 
-def interpret(bline):
+def _interpret_gps_line(bline):
     if len(bline.strip()) < 7:
         return None
     msg_type = bline[0:6].decode('utf-8')
@@ -72,8 +72,10 @@ def interpret(bline):
         logging.info(f"Unknown message: {msg_type} {repr(msg)}")
         return None
 
+#
 # TODO: Should be able to get rid of everything below here.
-
+#       But gotta refactor `test_gps` mode first to use new methods.
+#
 def stream_from_file(file_path):
     with open(file_path) as fp:
         line = fp.readline()
