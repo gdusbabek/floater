@@ -62,6 +62,7 @@ def update_gps(state):
         if time.time() - start_time > 10000:
             break
     logging.debug("Done with reading.")
+    logging.debug(repr(state))
 
 def update_temps(state):
     pass
@@ -135,7 +136,7 @@ if __name__ == '__main__':
         gpio.init_pins()
         gpio.enable_gps()
         line_count = 100
-        for msg in gps.collect():
+        for msg in gps.collect(duration_secs=250):
             line_count -= 1
             logging.debug(repr(msg))
             if line_count <= 0:
