@@ -27,7 +27,6 @@ class LatLon(object):
         else:
             return self.s[n + 1 + maybe_plus_one]
 
-
     @property
     def is_lat(self):
         return self.direction in ['N', 'S']
@@ -89,6 +88,52 @@ class MsgCodes(object):
             hilo += 'c' if MsgCodes.is_custom(code) else 's'
         return hilo
 
+class SSID(object):
+    ID_0 = ('0', 'Use VIA Path')
+    ID_1 = ('1', 'WIDE1-1')
+    ID_2 = ('2', 'WIDE2-2')
+    ID_3 = ('3', 'WIDE3-3')
+    ID_4 = ('4', 'WIDE4-4')
+    ID_5 = ('5', 'WIDE5-5')
+    ID_6 = ('6', 'WIDE6-6')
+    ID_7 = ('7', 'WIDE7-7')
+    ID_8 = ('8', 'North path')
+    ID_9 = ('9', 'South path')
+    ID_10 = ('10', 'East path')
+    ID_11 = ('11', 'West path')
+    ID_12 = ('12', 'North path + WIDE')
+    ID_13 = ('13', 'South path + WIDE')
+    ID_14 = ('14', 'East path + WIDE')
+    ID_15 = ('15', 'West path + WIDE')
+
+    @staticmethod
+    def normalize(key_or_tuple):
+        key = None
+        if isinstance(key_or_tuple, tuple):
+            key = key_or_tuple[0]
+        elif isinstance(key_or_tuple, int):
+            key = str(key_or_tuple)
+        else:
+            raise RuntimeError(f"Unexpected reference: {key_or_tuple}")
+        return {
+            '0': SSID.ID_0,
+            '1': SSID.ID_1,
+            '2': SSID.ID_2,
+            '3': SSID.ID_3,
+            '4': SSID.ID_4,
+            '5': SSID.ID_5,
+            '6': SSID.ID_6,
+            '7': SSID.ID_7,
+            '8': SSID.ID_8,
+            '9': SSID.ID_9,
+            '10': SSID.ID_10,
+            '11': SSID.ID_11,
+            '12': SSID.ID_12,
+            '13': SSID.ID_13,
+            '14': SSID.ID_14,
+            '15': SSID.ID_15
+        }[key]
+
 class DstField(object):
 
     @staticmethod
@@ -144,7 +189,14 @@ class MicE(object):
 
     def encode_dst_addr_char(self, n):
         """
-        n: [0,6]
+        mic-e destination address field (p43)
+        byte 0 : lat digit 1 + msg bit A
+        byte 1 : lat digit 2 + msg bit b
+        byte 2 : lat digit 3 + msg bit c
+        byte 3 : lat digit 4 + north/south latitude indicator bit
+        byte 4 : lat digit 5 + longitude offset indicator bit (0=0º, 1=100º)
+        byte 5 : lat digit 6 + west/east longitude indicator bit
+        byte 6 : aprs digi path code (note: could stuff other thigns here. we only 4 bits.)
         """
         if n < 0 or n > 6:
             raise RuntimeError(f"Invalid destination address index: {n}")
@@ -178,4 +230,38 @@ class MicE(object):
             raise RuntimeError(f"didn't count on this: {n},({lat_digit},{msg_bit},{ns},{lon_offset},{we})")
 
     def encode_info_char(self, n):
+        """
+        mic-e information field (p46)
+        byte 0 : data type id
+        bytes 2,3,4 : longitude
+        bytes 4,5,6 : speed and course
+        byte 7 : symbol code
+        byte 8 : symbol table id
+        more bytes : either mic-e telemetry or mic-e status text.
+        """
         pass
+
+def decode_lon_digit(ch, use_offset):
+    """
+    To decode the longitude degrees value:
+    1. subtract 28 from the d+28 value to obtain d.
+    2. if the longitude offset is +100 degrees, add 100 to d.
+    3. subtract 80 if 180 <= d <= 189
+    (i.e. the longitude is in the range 100–109 degrees).
+    4. or, subtract 190 if 190 <= d <= 199.
+    (i.e. the longitude is in the range 0–9 degrees).
+    """
+    d = ord(ch)
+    # quick range check. any character outside of this range is invalid.
+    if d < 38 or d > 127:
+        return None
+
+    # account for the +28.
+    d -= 28
+    if use_offset:
+        d += 100
+    if d >= 180 and d <= 189:
+        d -= 80
+    elif d >= 190 and d <= 199:
+        d -= 190
+    return d
