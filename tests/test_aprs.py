@@ -72,10 +72,10 @@ def test_map_of_tuples():
     assert m[('a','b',1)] == '1'
 
 def test_first_six_mice_encoding():
-    mic = aprs.MicE(aprs.MsgCodes.M3, aprs.LatLon('3325.6400N'), aprs.LatLon('01010.1010W'), None, None)
-    assert mic.dest_tuple(1) == 'S'
-    assert mic.dest_tuple(2) == '3'
-    assert mic.dest_tuple(3) == '2'
-    assert mic.dest_tuple(4) == 'U'
-    assert mic.dest_tuple(5) == '6'
-    assert mic.dest_tuple(6) == 'T'
+    mic = aprs.MicE("N0CALL", aprs.MsgCodes.M3, aprs.LatLon('3325.6400N'), aprs.LatLon('01010.1010W'), None, None)
+    assert mic.encode_dst_addr_char(1) == b'S'
+    assert mic.encode_dst_addr_char(2) == b'3'
+    assert mic.encode_dst_addr_char(3) == b'2'
+    assert mic.encode_dst_addr_char(4) == b'U'
+    assert mic.encode_dst_addr_char(5) == b'6'
+    assert mic.encode_dst_addr_char(6) == b'T'

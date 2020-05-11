@@ -11,6 +11,9 @@
 # 1 byte      : flag, same as first.
 
 Z = None
+FLAG = b'\x7e'
+CTRL = b'\x03'
+PCOL = b'\xf0'
 
 """ 2934.94157N,09817.02034W """
 class LatLon(object):
@@ -127,7 +130,8 @@ class DstField(object):
         return True if msg_bit == Z else msg_bit == '1c'
 
 class MicE(object):
-    def __init__(self, msg_code, lat, lon, course, speed):
+    def __init__(self, src_addr, msg_code, lat, lon, course, speed):
+        self.src_addr = src_addr
         self.msg_code = msg_code
         self.lat = lat
         self.lon = lon
@@ -137,7 +141,10 @@ class MicE(object):
         self.display_symbol = ''
         # todo: telemetry.
 
-    def dest_tuple(self, n):
+    def encode_dst_addr_char(self, n):
+        if n == 0:
+            return FLAG
+
         lat_digit = self.lat.mice_digit(n - 1)
         msg_bit = Z if n > 3 else MsgCodes.get_msg_bit(self.msg_code, n - 1)
         ns = Z if n != 4 else self.lat.direction
@@ -146,18 +153,18 @@ class MicE(object):
 
         if DstField.south(ns) and DstField.zero(lon_offset) and DstField.east(we) and DstField.zero(msg_bit):
             if lat_digit == ' ':
-                return 'L'
+                return b'L'
             else:
-                return lat_digit
+                return lat_digit.encode('utf-8')
         elif DstField.oneS(msg_bit) and DstField.north(ns) and DstField.hundred(lon_offset) and DstField.west(we):
             if lat_digit == ' ':
-                return 'Z'
+                return b'Z'
             else:
-                return chr(ord(lat_digit) + 32)
+                return chr(ord(lat_digit) + 32).encode('utf-8')
         elif DstField.oneC(msg_bit):
             if lat_digit == ' ':
-                return 'K'
+                return b'K'
             else:
-                return chr(ord(lat_digit) + 17)
+                return chr(ord(lat_digit) + 17).encode('utf-8')
         else:
             raise RuntimeError(f"didn't count on this: {n},({lat_digit},{msg_bit},{ns},{lon_offset},{we})")
