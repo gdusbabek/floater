@@ -73,9 +73,9 @@ def test_map_of_tuples():
 
 def test_first_six_mice_encoding():
     mic = aprs.MicE("N0CALL", aprs.MsgCodes.M3, aprs.LatLon('3325.6400N'), aprs.LatLon('01010.1010W'), None, None)
-    assert mic.encode_dst_addr_char(1) == b'S'
-    assert mic.encode_dst_addr_char(2) == b'3'
-    assert mic.encode_dst_addr_char(3) == b'2'
-    assert mic.encode_dst_addr_char(4) == b'U'
-    assert mic.encode_dst_addr_char(5) == b'6'
-    assert mic.encode_dst_addr_char(6) == b'T'
+    assert mic.encode_dst_addr_char(0) == b'S'
+    assert mic.encode_dst_addr_char(1) == b'3'
+    assert mic.encode_dst_addr_char(2) == b'2'
+    assert mic.encode_dst_addr_char(3) == b'U'
+    assert mic.encode_dst_addr_char(4) == b'6'
+    assert mic.encode_dst_addr_char(5) == b'T'

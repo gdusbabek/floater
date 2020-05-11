@@ -142,14 +142,11 @@ class MicE(object):
         # todo: telemetry.
 
     def encode_dst_addr_char(self, n):
-        if n == 0:
-            return FLAG
-
-        lat_digit = self.lat.mice_digit(n - 1)
-        msg_bit = Z if n > 3 else MsgCodes.get_msg_bit(self.msg_code, n - 1)
-        ns = Z if n != 4 else self.lat.direction
-        lon_offset = Z if n != 5 else 100 if self.lon.idegrees > 99 else 0
-        we = Z if n != 6 else self.lon.direction
+        lat_digit = self.lat.mice_digit(n)
+        msg_bit = Z if n > 2 else MsgCodes.get_msg_bit(self.msg_code, n)
+        ns = Z if n != 3 else self.lat.direction
+        lon_offset = Z if n != 4 else 100 if self.lon.idegrees > 99 else 0
+        we = Z if n != 5 else self.lon.direction
 
         if DstField.south(ns) and DstField.zero(lon_offset) and DstField.east(we) and DstField.zero(msg_bit):
             if lat_digit == ' ':
