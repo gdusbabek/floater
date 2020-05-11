@@ -130,7 +130,8 @@ class DstField(object):
         return True if msg_bit == Z else msg_bit == '1c'
 
 class MicE(object):
-    def __init__(self, src_addr, msg_code, lat, lon, course, speed):
+    def __init__(self, dst_ssid, src_addr, msg_code, lat, lon, course, speed):
+        self.dst_ssid = dst_ssid
         self.src_addr = src_addr
         self.msg_code = msg_code
         self.lat = lat
@@ -142,6 +143,16 @@ class MicE(object):
         # todo: telemetry.
 
     def encode_dst_addr_char(self, n):
+        """
+        n: [0,6]
+        """
+        if n < 0 or n > 6:
+            raise RuntimeError(f"Invalid destination address index: {n}")
+        elif n == 6:
+            # NOTE: the lookup table for the ssid is on p16.
+            return self.dst_ssid.encode('utf-8')
+
+        # characters 0..5
         lat_digit = self.lat.mice_digit(n)
         msg_bit = Z if n > 2 else MsgCodes.get_msg_bit(self.msg_code, n)
         ns = Z if n != 3 else self.lat.direction
@@ -165,3 +176,6 @@ class MicE(object):
                 return chr(ord(lat_digit) + 17).encode('utf-8')
         else:
             raise RuntimeError(f"didn't count on this: {n},({lat_digit},{msg_bit},{ns},{lon_offset},{we})")
+
+    def encode_info_char(self, n):
+        pass
