@@ -241,6 +241,14 @@ class MicE(object):
         """
         pass
 
+def clip(i, minimum, maximum):
+    if i < minimum:
+        return minimum
+    elif i > maximum:
+        return maximum
+    else:
+        return i
+
 def decode_lon_deg_ch(ch, use_offset):
     """
     To decode the longitude degrees value:
@@ -306,3 +314,24 @@ def encode_lon_hun_value(v):
         return None
     else:
         return chr(v + 28)
+
+def decode_speed_knots(ch):
+    # l=108, DEL=127, x1c=28, /=47 ;; 0=48  k=107
+    i = ord(ch)
+    if i >= 108 and i <= 127:
+        return 10 * (i - 108)
+    elif i >= 28 and i <= 47:
+        return 10 * (i - 28)
+    elif i >= 48 and i <= 107:
+        return 10 * (i - 48) + 200
+    else:
+        return None
+
+def encode_speed_knots(s):
+    spd = clip(s, 0, 799)
+    factor = spd // 10
+    if factor <= 19:
+        return chr(108 + factor)
+    else:  # factor >= 20
+        return chr(48 + factor - 20)
+

@@ -161,3 +161,23 @@ def test_encode_long_hun_char():
 
     assert aprs.encode_lon_hun_value(-1) == None
     assert aprs.encode_lon_hun_value(100) == None
+
+def test_decode_speed_knots():
+    assert aprs.decode_speed_knots('l') == 0
+    assert aprs.decode_speed_knots(chr(28)) == 0
+    assert aprs.decode_speed_knots('s') == 70
+    assert aprs.decode_speed_knots('#') == 70
+
+    assert aprs.decode_speed_knots('7') == 270
+    assert aprs.decode_speed_knots('k') == 790
+
+    assert aprs.decode_speed_knots(chr(10)) == None
+
+def test_encode_speed_knots():
+    assert aprs.encode_speed_knots(-1) == 'l'
+    assert aprs.encode_speed_knots(0) == 'l'
+    assert aprs.encode_speed_knots(73) == 's'
+    assert aprs.encode_speed_knots(275) == '7'
+    assert aprs.encode_speed_knots(799) == 'k'
+    assert aprs.encode_speed_knots(7990) == 'k'
+
