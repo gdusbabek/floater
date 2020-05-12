@@ -278,3 +278,10 @@ def encode_lon_deg_value(v):
     else:
         return None
 
+def encode_lon_min_value(v):
+    if v >= 0 and v <= 9:
+        return chr(88 + v)
+    elif v >= 10 and v <= 59:
+        return chr(v + 28)
+    else:
+        return None

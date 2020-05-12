@@ -82,7 +82,7 @@ def test_first_six_mice_encoding():
     assert mic.encode_dst_addr_char(4) == b'6'
     assert mic.encode_dst_addr_char(5) == b'T'
 
-def test_decode_lon_digit():
+def test_decode_lon_deg_ch():
     assert aprs.decode_lon_deg_ch('(', True) == 112
 
     # a few from 0..9
@@ -115,7 +115,7 @@ def test_decode_lon_digit():
     assert aprs.decode_lon_deg_ch(chr(128), True) == None
     assert aprs.decode_lon_deg_ch(chr(128), False) == None
 
-def test_encode_lon_digit():
+def test_encode_lon_deg_digit():
     assert aprs.encode_lon_deg_value(0) == ('v', True)
     assert aprs.encode_lon_deg_value(8) == ('~', True)
     assert aprs.encode_lon_deg_value(9) == (DEL, True)
@@ -130,3 +130,8 @@ def test_encode_lon_digit():
 
     assert aprs.encode_lon_deg_value(180) == None
 
+def test_encode_lon_min_digit():
+    assert aprs.encode_lon_min_value(0) == 'X'
+    assert aprs.encode_lon_min_value(9) == 'a'
+    assert aprs.encode_lon_min_value(10) == '&'
+    assert aprs.encode_lon_min_value(59) == 'W'
