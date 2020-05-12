@@ -121,7 +121,12 @@ def test_encode_lon_digit():
     assert aprs.encode_lon_deg_value(9) == (DEL, True)
 
     assert aprs.encode_lon_deg_value(10) == ('&', False)
-    assert aprs.encode_lon_deg_value(90) == ('&', False)
-    assert aprs.encode_lon_deg_value(98) == ('&', False)
-    assert aprs.encode_lon_deg_value(99) == ('&', False)
+    assert aprs.encode_lon_deg_value(90) == ('v', False)
+    assert aprs.encode_lon_deg_value(98) == ('~', False)
+    assert aprs.encode_lon_deg_value(99) == (DEL, False)
+
+    assert aprs.encode_lon_deg_value(110) == ('&', True)
+    assert aprs.encode_lon_deg_value(179) == ('k', True)
+
+    assert aprs.encode_lon_deg_value(180) == None
 
