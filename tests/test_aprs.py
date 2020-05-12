@@ -2,6 +2,8 @@ import floater.aprs as aprs
 
 # 2934.94157N,09817.02034W
 
+DEL = chr(127)
+
 def test_normal_lat_parse():
     spec = "2934.94157N"
     l = aprs.LatLon(spec)
@@ -87,13 +89,13 @@ def test_decode_lon_digit():
     assert aprs.decode_lon_deg_ch('&', True) != 10
     assert aprs.decode_lon_deg_ch('v', True) == 0
     assert aprs.decode_lon_deg_ch('~', True) == 8
-    assert aprs.decode_lon_deg_ch(chr(127), True) == 9
+    assert aprs.decode_lon_deg_ch(DEL, True) == 9
 
     # a few from 10..99
     assert aprs.decode_lon_deg_ch('&', False) == 10
     assert aprs.decode_lon_deg_ch('v', False) == 90
     assert aprs.decode_lon_deg_ch('~', False) == 98
-    assert aprs.decode_lon_deg_ch(chr(127), False) == 99
+    assert aprs.decode_lon_deg_ch(DEL, False) == 99
 
     # 100..109
     assert aprs.decode_lon_deg_ch('k', True) != 99
@@ -112,3 +114,14 @@ def test_decode_lon_digit():
     assert aprs.decode_lon_deg_ch('%', False) == None
     assert aprs.decode_lon_deg_ch(chr(128), True) == None
     assert aprs.decode_lon_deg_ch(chr(128), False) == None
+
+def test_encode_lon_digit():
+    assert aprs.encode_lon_deg_value(0) == ('v', True)
+    assert aprs.encode_lon_deg_value(8) == ('~', True)
+    assert aprs.encode_lon_deg_value(9) == (DEL, True)
+
+    assert aprs.encode_lon_deg_value(10) == ('&', False)
+    assert aprs.encode_lon_deg_value(90) == ('&', False)
+    assert aprs.encode_lon_deg_value(98) == ('&', False)
+    assert aprs.encode_lon_deg_value(99) == ('&', False)
+

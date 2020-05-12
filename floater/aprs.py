@@ -265,3 +265,16 @@ def decode_lon_deg_ch(ch, use_offset):
     elif d >= 190 and d <= 199:
         d -= 190
     return d
+
+def encode_lon_deg_value(v):
+    if v >=0 and v <= 9:
+        return (chr(118 + v), True)
+    elif v >= 10 and v <= 99:
+        return (chr(v + 28), False)
+    elif v >= 100 and v <= 109:
+        return (chr(v + 8), True)
+    elif v >= 110 and v <= 179:
+        return (chr(i - 72), True)
+    else:
+        return None
+
