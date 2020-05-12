@@ -81,34 +81,34 @@ def test_first_six_mice_encoding():
     assert mic.encode_dst_addr_char(5) == b'T'
 
 def test_decode_lon_digit():
-    assert aprs.decode_lon_digit('(', True) == 112
+    assert aprs.decode_lon_deg_ch('(', True) == 112
 
     # a few from 0..9
-    assert aprs.decode_lon_digit('&', True) != 10
-    assert aprs.decode_lon_digit('v', True) == 0
-    assert aprs.decode_lon_digit('~', True) == 8
-    assert aprs.decode_lon_digit(chr(127), True) == 9
+    assert aprs.decode_lon_deg_ch('&', True) != 10
+    assert aprs.decode_lon_deg_ch('v', True) == 0
+    assert aprs.decode_lon_deg_ch('~', True) == 8
+    assert aprs.decode_lon_deg_ch(chr(127), True) == 9
 
     # a few from 10..99
-    assert aprs.decode_lon_digit('&', False) == 10
-    assert aprs.decode_lon_digit('v', False) == 90
-    assert aprs.decode_lon_digit('~', False) == 98
-    assert aprs.decode_lon_digit(chr(127), False) == 99
+    assert aprs.decode_lon_deg_ch('&', False) == 10
+    assert aprs.decode_lon_deg_ch('v', False) == 90
+    assert aprs.decode_lon_deg_ch('~', False) == 98
+    assert aprs.decode_lon_deg_ch(chr(127), False) == 99
 
     # 100..109
-    assert aprs.decode_lon_digit('k', True) != 99
-    assert aprs.decode_lon_digit('l', True) == 100
-    assert aprs.decode_lon_digit('u', True) == 109
-    assert aprs.decode_lon_digit('v', True) != 110
+    assert aprs.decode_lon_deg_ch('k', True) != 99
+    assert aprs.decode_lon_deg_ch('l', True) == 100
+    assert aprs.decode_lon_deg_ch('u', True) == 109
+    assert aprs.decode_lon_deg_ch('v', True) != 110
 
     # 110..179
-    assert aprs.decode_lon_digit('%', True) != 109
-    assert aprs.decode_lon_digit('&', True) == 110
-    assert aprs.decode_lon_digit('k', True) == 179
-    assert aprs.decode_lon_digit('l', True) != 180
+    assert aprs.decode_lon_deg_ch('%', True) != 109
+    assert aprs.decode_lon_deg_ch('&', True) == 110
+    assert aprs.decode_lon_deg_ch('k', True) == 179
+    assert aprs.decode_lon_deg_ch('l', True) != 180
 
     # out of range. response is not specified.
-    assert aprs.decode_lon_digit('%', True) == None
-    assert aprs.decode_lon_digit('%', False) == None
-    assert aprs.decode_lon_digit(chr(128), True) == None
-    assert aprs.decode_lon_digit(chr(128), False) == None
+    assert aprs.decode_lon_deg_ch('%', True) == None
+    assert aprs.decode_lon_deg_ch('%', False) == None
+    assert aprs.decode_lon_deg_ch(chr(128), True) == None
+    assert aprs.decode_lon_deg_ch(chr(128), False) == None

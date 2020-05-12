@@ -241,7 +241,7 @@ class MicE(object):
         """
         pass
 
-def decode_lon_digit(ch, use_offset):
+def decode_lon_deg_ch(ch, use_offset):
     """
     To decode the longitude degrees value:
     1. subtract 28 from the d+28 value to obtain d.
