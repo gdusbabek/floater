@@ -136,8 +136,14 @@ def test_decode_lon_min_char():
     assert aprs.decode_lon_min_ch('&') == 10
     assert aprs.decode_lon_min_ch('W') == 59
 
+    assert aprs.decode_lon_min_ch('%') == None
+    assert aprs.decode_lon_min_ch('b') == None
+
 def test_encode_lon_min_digit():
     assert aprs.encode_lon_min_value(0) == 'X'
     assert aprs.encode_lon_min_value(9) == 'a'
     assert aprs.encode_lon_min_value(10) == '&'
     assert aprs.encode_lon_min_value(59) == 'W'
+
+    assert aprs.encode_lon_min_value(-1) == None
+    assert aprs.encode_lon_min_value(60) == None
