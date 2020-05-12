@@ -130,6 +130,12 @@ def test_encode_lon_deg_digit():
 
     assert aprs.encode_lon_deg_value(180) == None
 
+def test_decode_lon_min_char():
+    assert aprs.decode_lon_min_ch('X') == 0
+    assert aprs.decode_lon_min_ch('a') == 9
+    assert aprs.decode_lon_min_ch('&') == 10
+    assert aprs.decode_lon_min_ch('W') == 59
+
 def test_encode_lon_min_digit():
     assert aprs.encode_lon_min_value(0) == 'X'
     assert aprs.encode_lon_min_value(9) == 'a'

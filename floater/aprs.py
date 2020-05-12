@@ -278,6 +278,16 @@ def encode_lon_deg_value(v):
     else:
         return None
 
+
+def decode_lon_min_ch(ch):
+    i = ord(ch)
+    if i >= 88 and i <= 97:
+        return i - 88
+    elif i >= 38 and i <= 87:
+        return i - 28
+    else:
+        return None
+
 def encode_lon_min_value(v):
     if v >= 0 and v <= 9:
         return chr(88 + v)
