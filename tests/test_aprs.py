@@ -147,3 +147,17 @@ def test_encode_lon_min_digit():
 
     assert aprs.encode_lon_min_value(-1) == None
     assert aprs.encode_lon_min_value(60) == None
+
+def test_decode_lon_hun_char():
+    assert aprs.decode_lon_hun_ch('&') == 10
+    assert aprs.decode_lon_hun_ch(DEL) == 99
+
+    assert aprs.decode_lon_hun_ch(chr(27)) == None
+    assert aprs.decode_lon_hun_ch(chr(128)) == None
+
+def test_encode_long_hun_char():
+    assert aprs.encode_lon_hun_value(10) == '&'
+    assert aprs.encode_lon_hun_value(99) == DEL
+
+    assert aprs.encode_lon_hun_value(-1) == None
+    assert aprs.encode_lon_hun_value(100) == None

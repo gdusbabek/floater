@@ -295,3 +295,14 @@ def encode_lon_min_value(v):
         return chr(v + 28)
     else:
         return None
+
+def decode_lon_hun_ch(ch):
+    i = ord(ch)
+    i -= 28
+    return None if i < 0 or i > 99 else i
+
+def encode_lon_hun_value(v):
+    if v < 0 or v > 99:
+        return None
+    else:
+        return chr(v + 28)
