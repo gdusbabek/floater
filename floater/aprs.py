@@ -336,12 +336,17 @@ def encode_speed_tens_knots(s):
         return chr(48 + factor - 20)
 
 def decode_dc28(ch):
-    # returns speed in ones of knots and course in hundreds of degrees.
+    """
+    returns a tuple of speed in ones of knots (0-9) and course in hundreds of degrees (100, 200, etc.)
+    """
     speed = (ord(ch) - 28) // 10
     course = (((ord(ch) - 28) % 10) % 4) * 100
     return (speed, course)
 
 def encode_dc28(speed, course):
+    """
+    encodes speed and course. Speed is modulo'd to 0..9 and course is bucketed to hundreds of degrees (100, 200, etc.)
+    """
     # speed bucket is naturally 0..9
     # course (hundreds of degrees) buckets four ways: 0..3
     speed_bucket = speed % 10
