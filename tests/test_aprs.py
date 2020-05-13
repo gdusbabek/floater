@@ -148,19 +148,19 @@ def test_encode_lon_min_digit():
     assert aprs.encode_lon_min_value(-1) == None
     assert aprs.encode_lon_min_value(60) == None
 
-def test_decode_lon_hun_char():
-    assert aprs.decode_lon_hun_ch('&') == 10
-    assert aprs.decode_lon_hun_ch(DEL) == 99
+def test_decode_h28_lon_hun():
+    assert aprs.decode_h28('&') == 10
+    assert aprs.decode_h28(DEL) == 99
 
-    assert aprs.decode_lon_hun_ch(chr(27)) == None
-    assert aprs.decode_lon_hun_ch(chr(128)) == None
+    assert aprs.decode_h28(chr(27)) == None
+    assert aprs.decode_h28(chr(128)) == None
 
-def test_encode_long_hun_char():
-    assert aprs.encode_lon_hun_value(10) == '&'
-    assert aprs.encode_lon_hun_value(99) == DEL
+def test_encode_h28_lon_hun():
+    assert aprs.encode_h28(10) == '&'
+    assert aprs.encode_h28(99) == DEL
 
-    assert aprs.encode_lon_hun_value(-1) == None
-    assert aprs.encode_lon_hun_value(100) == None
+    assert aprs.encode_h28(-1) == None
+    assert aprs.encode_h28(100) == None
 
 def test_decode_sp28_coarse_speed():
     assert aprs.decode_sp28('l') == 0

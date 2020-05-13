@@ -304,12 +304,18 @@ def encode_lon_min_value(v):
     else:
         return None
 
-def decode_lon_hun_ch(ch):
+def decode_h28(ch):
+    """
+    decode longitude hundredths of minutes (0 to 99 hundredths)
+    """
     i = ord(ch)
     i -= 28
     return None if i < 0 or i > 99 else i
 
-def encode_lon_hun_value(v):
+def encode_h28(v):
+    """
+    encode longitude hundredths of minutes to a char
+    """
     if v < 0 or v > 99:
         return None
     else:
