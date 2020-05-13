@@ -83,70 +83,70 @@ def test_first_six_mice_encoding():
     assert mic.encode_dst_addr_char(5) == b'T'
 
 def test_decode_lon_deg_ch():
-    assert aprs.decode_lon_deg_ch('(', True) == 112
+    assert aprs.decode_d28('(', True) == 112
 
     # a few from 0..9
-    assert aprs.decode_lon_deg_ch('&', True) != 10
-    assert aprs.decode_lon_deg_ch('v', True) == 0
-    assert aprs.decode_lon_deg_ch('~', True) == 8
-    assert aprs.decode_lon_deg_ch(DEL, True) == 9
+    assert aprs.decode_d28('&', True) != 10
+    assert aprs.decode_d28('v', True) == 0
+    assert aprs.decode_d28('~', True) == 8
+    assert aprs.decode_d28(DEL, True) == 9
 
     # a few from 10..99
-    assert aprs.decode_lon_deg_ch('&', False) == 10
-    assert aprs.decode_lon_deg_ch('v', False) == 90
-    assert aprs.decode_lon_deg_ch('~', False) == 98
-    assert aprs.decode_lon_deg_ch(DEL, False) == 99
+    assert aprs.decode_d28('&', False) == 10
+    assert aprs.decode_d28('v', False) == 90
+    assert aprs.decode_d28('~', False) == 98
+    assert aprs.decode_d28(DEL, False) == 99
 
     # 100..109
-    assert aprs.decode_lon_deg_ch('k', True) != 99
-    assert aprs.decode_lon_deg_ch('l', True) == 100
-    assert aprs.decode_lon_deg_ch('u', True) == 109
-    assert aprs.decode_lon_deg_ch('v', True) != 110
+    assert aprs.decode_d28('k', True) != 99
+    assert aprs.decode_d28('l', True) == 100
+    assert aprs.decode_d28('u', True) == 109
+    assert aprs.decode_d28('v', True) != 110
 
     # 110..179
-    assert aprs.decode_lon_deg_ch('%', True) != 109
-    assert aprs.decode_lon_deg_ch('&', True) == 110
-    assert aprs.decode_lon_deg_ch('k', True) == 179
-    assert aprs.decode_lon_deg_ch('l', True) != 180
+    assert aprs.decode_d28('%', True) != 109
+    assert aprs.decode_d28('&', True) == 110
+    assert aprs.decode_d28('k', True) == 179
+    assert aprs.decode_d28('l', True) != 180
 
     # out of range. response is not specified.
-    assert aprs.decode_lon_deg_ch('%', True) == None
-    assert aprs.decode_lon_deg_ch('%', False) == None
-    assert aprs.decode_lon_deg_ch(chr(128), True) == None
-    assert aprs.decode_lon_deg_ch(chr(128), False) == None
+    assert aprs.decode_d28('%', True) == None
+    assert aprs.decode_d28('%', False) == None
+    assert aprs.decode_d28(chr(128), True) == None
+    assert aprs.decode_d28(chr(128), False) == None
 
 def test_encode_lon_deg_digit():
-    assert aprs.encode_lon_deg_value(0) == ('v', True)
-    assert aprs.encode_lon_deg_value(8) == ('~', True)
-    assert aprs.encode_lon_deg_value(9) == (DEL, True)
+    assert aprs.encode_d28(0) == ('v', True)
+    assert aprs.encode_d28(8) == ('~', True)
+    assert aprs.encode_d28(9) == (DEL, True)
 
-    assert aprs.encode_lon_deg_value(10) == ('&', False)
-    assert aprs.encode_lon_deg_value(90) == ('v', False)
-    assert aprs.encode_lon_deg_value(98) == ('~', False)
-    assert aprs.encode_lon_deg_value(99) == (DEL, False)
+    assert aprs.encode_d28(10) == ('&', False)
+    assert aprs.encode_d28(90) == ('v', False)
+    assert aprs.encode_d28(98) == ('~', False)
+    assert aprs.encode_d28(99) == (DEL, False)
 
-    assert aprs.encode_lon_deg_value(110) == ('&', True)
-    assert aprs.encode_lon_deg_value(179) == ('k', True)
+    assert aprs.encode_d28(110) == ('&', True)
+    assert aprs.encode_d28(179) == ('k', True)
 
-    assert aprs.encode_lon_deg_value(180) == None
+    assert aprs.encode_d28(180) == None
 
-def test_decode_lon_min_char():
-    assert aprs.decode_lon_min_ch('X') == 0
-    assert aprs.decode_lon_min_ch('a') == 9
-    assert aprs.decode_lon_min_ch('&') == 10
-    assert aprs.decode_lon_min_ch('W') == 59
+def test_decode_m28_lon_min():
+    assert aprs.decode_m28('X') == 0
+    assert aprs.decode_m28('a') == 9
+    assert aprs.decode_m28('&') == 10
+    assert aprs.decode_m28('W') == 59
 
-    assert aprs.decode_lon_min_ch('%') == None
-    assert aprs.decode_lon_min_ch('b') == None
+    assert aprs.decode_m28('%') == None
+    assert aprs.decode_m28('b') == None
 
-def test_encode_lon_min_digit():
-    assert aprs.encode_lon_min_value(0) == 'X'
-    assert aprs.encode_lon_min_value(9) == 'a'
-    assert aprs.encode_lon_min_value(10) == '&'
-    assert aprs.encode_lon_min_value(59) == 'W'
+def test_encode_m28_lon_min():
+    assert aprs.encode_m28(0) == 'X'
+    assert aprs.encode_m28(9) == 'a'
+    assert aprs.encode_m28(10) == '&'
+    assert aprs.encode_m28(59) == 'W'
 
-    assert aprs.encode_lon_min_value(-1) == None
-    assert aprs.encode_lon_min_value(60) == None
+    assert aprs.encode_m28(-1) == None
+    assert aprs.encode_m28(60) == None
 
 def test_decode_h28_lon_hun():
     assert aprs.decode_h28('&') == 10

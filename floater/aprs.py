@@ -249,16 +249,8 @@ def clip(i, minimum, maximum):
     else:
         return i
 
-def decode_lon_deg_ch(ch, use_offset):
-    """
-    To decode the longitude degrees value:
-    1. subtract 28 from the d+28 value to obtain d.
-    2. if the longitude offset is +100 degrees, add 100 to d.
-    3. subtract 80 if 180 <= d <= 189
-    (i.e. the longitude is in the range 100–109 degrees).
-    4. or, subtract 190 if 190 <= d <= 199.
-    (i.e. the longitude is in the range 0–9 degrees).
-    """
+def decode_d28(ch, use_offset):
+    """ decode longitude dgegrees. """
     d = ord(ch)
     # quick range check. any character outside of this range is invalid.
     if d < 38 or d > 127:
@@ -274,7 +266,12 @@ def decode_lon_deg_ch(ch, use_offset):
         d -= 190
     return d
 
-def encode_lon_deg_value(v):
+def encode_d28(v):
+    """
+    encodes the longitude degrees value. 0-179 degrees.
+    returns a tuple if (char, used_lon_offset). used_lon_offset is a bit that means the
+    decoded value will need to have 100 added to it. or something. I dunno.
+    """
     if v >= 0 and v <= 9:
         return (chr(118 + v), True)
     elif v >= 10 and v <= 99:
