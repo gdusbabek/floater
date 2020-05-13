@@ -1,6 +1,51 @@
 
 Z = None
 
+""" 2934.94157N,09817.02034W """
+class LatLon(object):
+    def __init__(self, s):
+        self.s = s
+
+    def mice_digit(self, n):
+        maybe_plus_one = 0 if self.is_lat else 1
+        if n < 4:
+            return self.s[n + maybe_plus_one]
+        else:
+            return self.s[n + 1 + maybe_plus_one]
+
+    @property
+    def is_lat(self):
+        return self.direction in ['N', 'S']
+
+    @property
+    def direction(self):
+        return self.s[-1]
+
+    @property
+    def is_north(self):
+        return self.is_lat and self.direction == 'N'
+
+    @property
+    def sdegrees(self):
+        end = 2 if self.is_lat else 3
+        return self.s[0:end]
+
+    @property
+    def idegrees(self):
+        return int(self.sdegrees.lstrip('0'))
+
+    @property
+    def sminutes(self):
+        start = 2 if self.is_lat else 3
+        return self.s[start:-1]
+
+    @property
+    def fminutes(self):
+        return float(self.sminutes.strip('0'))
+
+    def __repr__(self):
+        return self.s
+
 def encode_dst_addr(dst_ssid, lat, lon, msg_code):
     """
     mic-e destination address field (p43)
@@ -11,6 +56,7 @@ def encode_dst_addr(dst_ssid, lat, lon, msg_code):
     byte 4 : lat digit 5 + longitude offset indicator bit (0=0º, 1=100º)
     byte 5 : lat digit 6 + west/east longitude indicator bit
     byte 6 : aprs digi path code (note: could stuff other thigns here. we only 4 bits.)
+    TODO: write a decoder. :)
     """
     result = ''
     for n in range(7):  # TODO: not currently handling byte 6 (digi path lookup code). should be int(0..15)
@@ -172,6 +218,17 @@ def encode_dc28(speed, course):
     # GROUPINGS = [ord('\x1c'), ord('&'), ord('0'), ord(':'), ord('D'), ord('N'), ord('X'), ord('b'), ord('l'), ord('v')]
     ch = chr(GROUPINGS[speed_bucket] + course_bucket)
     return ch
+
+def decode_se28(ch):
+    """decode tens and ones of degrees, i.e. 0-99"""
+    return ord(ch) - 28
+
+def encode_se28(course_degrees):
+    """ encode tens and ones of degrees, i.e. 0-99 """
+    # modulo to get something 0-99 then add 28 and char it.
+    m = course_degrees % 100
+    m += 28
+    return chr(m)
 
 
 #
