@@ -287,7 +287,8 @@ def encode_lon_deg_value(v):
         return None
 
 
-def decode_lon_min_ch(ch):
+def decode_m28(ch):
+    """ decode the longitude minutes. range is 0..60. """
     i = ord(ch)
     if i >= 88 and i <= 97:
         return i - 88
@@ -296,7 +297,8 @@ def decode_lon_min_ch(ch):
     else:
         return None
 
-def encode_lon_min_value(v):
+def encode_m28(v):
+    """ encode the longitude minutes """
     if v >= 0 and v <= 9:
         return chr(88 + v)
     elif v >= 10 and v <= 59:
