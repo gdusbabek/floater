@@ -162,22 +162,45 @@ def test_encode_long_hun_char():
     assert aprs.encode_lon_hun_value(-1) == None
     assert aprs.encode_lon_hun_value(100) == None
 
-def test_decode_speed_knots():
-    assert aprs.decode_speed_knots('l') == 0
-    assert aprs.decode_speed_knots(chr(28)) == 0
-    assert aprs.decode_speed_knots('s') == 70
-    assert aprs.decode_speed_knots('#') == 70
+def test_decode_speed_tens_knots():
+    assert aprs.decode_speed_tens_knots('l') == 0
+    assert aprs.decode_speed_tens_knots(chr(28)) == 0
+    assert aprs.decode_speed_tens_knots('s') == 70
+    assert aprs.decode_speed_tens_knots('#') == 70
 
-    assert aprs.decode_speed_knots('7') == 270
-    assert aprs.decode_speed_knots('k') == 790
+    assert aprs.decode_speed_tens_knots('7') == 270
+    assert aprs.decode_speed_tens_knots('k') == 790
 
-    assert aprs.decode_speed_knots(chr(10)) == None
+    assert aprs.decode_speed_tens_knots(chr(10)) == None
 
-def test_encode_speed_knots():
-    assert aprs.encode_speed_knots(-1) == 'l'
-    assert aprs.encode_speed_knots(0) == 'l'
-    assert aprs.encode_speed_knots(73) == 's'
-    assert aprs.encode_speed_knots(275) == '7'
-    assert aprs.encode_speed_knots(799) == 'k'
-    assert aprs.encode_speed_knots(7990) == 'k'
+def test_encode_speed_tens_knots():
+    assert aprs.encode_speed_tens_knots(-1) == 'l'
+    assert aprs.encode_speed_tens_knots(0) == 'l'
+    assert aprs.encode_speed_tens_knots(73) == 's'
+    assert aprs.encode_speed_tens_knots(275) == '7'
+    assert aprs.encode_speed_tens_knots(799) == 'k'
+    assert aprs.encode_speed_tens_knots(7990) == 'k'
 
+def test_decode_dc28():
+    assert aprs.decode_dc28(' ') == aprs.decode_dc28('\x1c') == (0, 0)
+    assert aprs.decode_dc28('+') == aprs.decode_dc28('\'') == (1, 100)
+    assert aprs.decode_dc28('6') == aprs.decode_dc28('2') == (2, 200)
+    assert aprs.decode_dc28('A') == aprs.decode_dc28('=') == (3, 300)
+    assert aprs.decode_dc28('H') == aprs.decode_dc28('D') == (4, 0)
+    assert aprs.decode_dc28('S') == aprs.decode_dc28('O') == (5, 100)
+    assert aprs.decode_dc28('^') == aprs.decode_dc28('Z') == (6, 200)
+    assert aprs.decode_dc28('i') == aprs.decode_dc28('e') == (7, 300)
+    assert aprs.decode_dc28('p') == aprs.decode_dc28('l') == (8, 0)
+    assert aprs.decode_dc28('{') == aprs.decode_dc28('w') == (9, 100)
+
+def test_encode_dc28():
+    assert aprs.encode_dc28(10, 50) == ' '
+    assert aprs.encode_dc28(21, 121) == '+'
+    assert aprs.encode_dc28(32, 222) == '6'
+    assert aprs.encode_dc28(43, 359) == 'A'
+    assert aprs.encode_dc28(54, 70) == 'H'
+    assert aprs.encode_dc28(65, 160) == 'S'
+    assert aprs.encode_dc28(76, 297) == '^'
+    assert aprs.encode_dc28(87, 320) == 'i'
+    assert aprs.encode_dc28(98, 14) == 'p'
+    assert aprs.encode_dc28(109, 195) == '{'

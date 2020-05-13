@@ -315,7 +315,7 @@ def encode_lon_hun_value(v):
     else:
         return chr(v + 28)
 
-def decode_speed_knots(ch):
+def decode_speed_tens_knots(ch):
     # l=108, DEL=127, x1c=28, /=47 ;; 0=48  k=107
     i = ord(ch)
     if i >= 108 and i <= 127:
@@ -327,11 +327,31 @@ def decode_speed_knots(ch):
     else:
         return None
 
-def encode_speed_knots(s):
+def encode_speed_tens_knots(s):
     spd = clip(s, 0, 799)
     factor = spd // 10
     if factor <= 19:
         return chr(108 + factor)
     else:  # factor >= 20
         return chr(48 + factor - 20)
+
+def decode_dc28(ch):
+    # returns speed in ones of knots and course in hundreds of degrees.
+    speed = (ord(ch) - 28) // 10
+    course = (((ord(ch) - 28) % 10) % 4) * 100
+    return (speed, course)
+
+def encode_dc28(speed, course):
+    # speed bucket is naturally 0..9
+    # course (hundreds of degrees) buckets four ways: 0..3
+    speed_bucket = speed % 10
+    course_bucket = clip(course, 0, 360) // 100
+
+    # there are 10 logical groupings in the table. each one is four characters long and can be indexed by the speed bucket.
+    GROUPINGS = [ord(' '), ord('*'), ord('4'), ord('>'), ord('H'), ord('R'), ord('\\'), ord('f'), ord('p'), ord('z')]
+    # could have also used this:
+    # GROUPINGS = [ord('\x1c'), ord('&'), ord('0'), ord(':'), ord('D'), ord('N'), ord('X'), ord('b'), ord('l'), ord('v')]
+    ch = chr(GROUPINGS[speed_bucket] + course_bucket)
+    return ch
+
 
