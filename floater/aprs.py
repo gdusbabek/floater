@@ -315,7 +315,10 @@ def encode_lon_hun_value(v):
     else:
         return chr(v + 28)
 
-def decode_speed_tens_knots(ch):
+def decode_sp28(ch):
+    """
+    decode the speed into 10s of knots. e.g. 10, 20, 110, 120, etc.
+    """
     # l=108, DEL=127, x1c=28, /=47 ;; 0=48  k=107
     i = ord(ch)
     if i >= 108 and i <= 127:
@@ -327,8 +330,11 @@ def decode_speed_tens_knots(ch):
     else:
         return None
 
-def encode_speed_tens_knots(s):
-    spd = clip(s, 0, 799)
+def encode_sp28(speed_knots):
+    """
+    encode the speed. The result represents speed in units of 10 knots, e.g. 10, 20, 12, 130, etc.
+    """
+    spd = clip(speed_knots, 0, 799)
     factor = spd // 10
     if factor <= 19:
         return chr(108 + factor)
