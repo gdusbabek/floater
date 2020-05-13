@@ -74,15 +74,14 @@ def test_map_of_tuples():
     assert m[('a','b',1)] == '1'
 
 def test_first_six_mice_encoding():
-    mic = aprs.MicE(0, "N0CALL", aprs.MsgCodes.M3, aprs.LatLon('3325.6400N'), aprs.LatLon('01010.1010W'), None, None)
-    assert mic.encode_dst_addr_char(0) == b'S'
-    assert mic.encode_dst_addr_char(1) == b'3'
-    assert mic.encode_dst_addr_char(2) == b'2'
-    assert mic.encode_dst_addr_char(3) == b'U'
-    assert mic.encode_dst_addr_char(4) == b'6'
-    assert mic.encode_dst_addr_char(5) == b'T'
+    dst_ssid = 0
+    msg_code = aprs.MsgCodes.M3
+    lat = aprs.LatLon('3325.6400N')
+    lon = aprs.LatLon('01010.1010W')
 
-def test_decode_lon_deg_ch():
+    assert aprs.encode_dst_addr(dst_ssid, lat, lon, msg_code) == b'S32U6T\x00'
+
+def test_decode_d28_lon_deg():
     assert aprs.decode_d28('(', True) == 112
 
     # a few from 0..9
@@ -115,7 +114,7 @@ def test_decode_lon_deg_ch():
     assert aprs.decode_d28(chr(128), True) == None
     assert aprs.decode_d28(chr(128), False) == None
 
-def test_encode_lon_deg_digit():
+def test_encode_d28_lon_deg():
     assert aprs.encode_d28(0) == ('v', True)
     assert aprs.encode_d28(8) == ('~', True)
     assert aprs.encode_d28(9) == (DEL, True)

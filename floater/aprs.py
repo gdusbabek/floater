@@ -187,59 +187,49 @@ class MicE(object):
         self.display_symbol = ''
         # todo: telemetry.
 
-    def encode_dst_addr_char(self, n):
-        """
-        mic-e destination address field (p43)
-        byte 0 : lat digit 1 + msg bit A
-        byte 1 : lat digit 2 + msg bit b
-        byte 2 : lat digit 3 + msg bit c
-        byte 3 : lat digit 4 + north/south latitude indicator bit
-        byte 4 : lat digit 5 + longitude offset indicator bit (0=0º, 1=100º)
-        byte 5 : lat digit 6 + west/east longitude indicator bit
-        byte 6 : aprs digi path code (note: could stuff other thigns here. we only 4 bits.)
-        """
-        if n < 0 or n > 6:
-            raise RuntimeError(f"Invalid destination address index: {n}")
-        elif n == 6:
-            # NOTE: the lookup table for the ssid is on p16.
-            return self.dst_ssid.encode('utf-8')
+def encode_dst_addr(dst_ssid, lat, lon, msg_code):
+    """
+    mic-e destination address field (p43)
+    byte 0 : lat digit 1 + msg bit A
+    byte 1 : lat digit 2 + msg bit b
+    byte 2 : lat digit 3 + msg bit c
+    byte 3 : lat digit 4 + north/south latitude indicator bit
+    byte 4 : lat digit 5 + longitude offset indicator bit (0=0º, 1=100º)
+    byte 5 : lat digit 6 + west/east longitude indicator bit
+    byte 6 : aprs digi path code (note: could stuff other thigns here. we only 4 bits.)
+    """
+    result = ''
+    for n in range(7):  # TODO: not currently handling byte 6 (digi path lookup code). should be int(0..15)
 
         # characters 0..5
-        lat_digit = self.lat.mice_digit(n)
-        msg_bit = Z if n > 2 else MsgCodes.get_msg_bit(self.msg_code, n)
-        ns = Z if n != 3 else self.lat.direction
-        lon_offset = Z if n != 4 else 100 if self.lon.idegrees > 99 else 0
-        we = Z if n != 5 else self.lon.direction
+        lat_digit = lat.mice_digit(n)
+        msg_bit = Z if n > 2 else MsgCodes.get_msg_bit(msg_code, n)
+        ns = Z if n != 3 else lat.direction
+        lon_offset = Z if n != 4 else 100 if lon.idegrees > 99 else 0
+        we = Z if n != 5 else lon.direction
 
-        if DstField.south(ns) and DstField.zero(lon_offset) and DstField.east(we) and DstField.zero(msg_bit):
+        if n == 6:
+            # NOTE: the lookup table for the ssid is on p16.
+            result += str(chr(dst_ssid))
+        elif DstField.south(ns) and DstField.zero(lon_offset) and DstField.east(we) and DstField.zero(msg_bit):
             if lat_digit == ' ':
-                return b'L'
+                result += 'L'
             else:
-                return lat_digit.encode('utf-8')
+                result += lat_digit
         elif DstField.oneS(msg_bit) and DstField.north(ns) and DstField.hundred(lon_offset) and DstField.west(we):
             if lat_digit == ' ':
-                return b'Z'
+                result += 'Z'
             else:
-                return chr(ord(lat_digit) + 32).encode('utf-8')
+                result += chr(ord(lat_digit) + 32)
         elif DstField.oneC(msg_bit):
             if lat_digit == ' ':
-                return b'K'
+                result += 'K'
             else:
-                return chr(ord(lat_digit) + 17).encode('utf-8')
+                result += chr(ord(lat_digit) + 17)
         else:
             raise RuntimeError(f"didn't count on this: {n},({lat_digit},{msg_bit},{ns},{lon_offset},{we})")
 
-    def encode_info_char(self, n):
-        """
-        mic-e information field (p46)
-        byte 0 : data type id
-        bytes 2,3,4 : longitude
-        bytes 4,5,6 : speed and course
-        byte 7 : symbol code
-        byte 8 : symbol table id
-        more bytes : either mic-e telemetry or mic-e status text.
-        """
-        pass
+    return result.encode('utf-8')
 
 def clip(i, minimum, maximum):
     if i < minimum:
