@@ -3,6 +3,7 @@ wheel
 pyserial
 # RPi.GPIO
 pynmea2
+bitstring
 git+https://github.com/ampledata/audiogen.git@ac89d3f5aa41d1bcbda43dad8ac6d3f379a884e7#egg=audiogen
 git+https://github.com/gdusbabek/afsk.git@e5f402f96b57d245be2aefe81806944b7b975fcc#egg=afsk
 pytest
