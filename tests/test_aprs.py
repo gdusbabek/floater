@@ -16,7 +16,7 @@ def test_decode_call():
     assert aprs.decode_call(b'\x82\xa0\xa4\xa6@@`') == 'APRS-0'
 
 def test_encode_digis():
-    assert aprs.encode_digis(['WIDE1-1', 'RELAY']) == b'\xae\x92\x88\x8ab@b\xa4\x8a\x98\x82\xb2@`'
+    assert aprs.encode_digis(['WIDE1-1', 'RELAY']) == b'\xae\x92\x88\x8ab@b\xa4\x8a\x98\x82\xb2@a'
 
 def test_decode_digis():
     assert aprs.decode_digis(b'\xae\x92\x88\x8ab@b\xa4\x8a\x98\x82\xb2@`') == ['WIDE1-1', 'RELAY-0']
@@ -52,3 +52,42 @@ def test_encode_altitude():
     assert aprs.encode_altitude(123) == '/A=000123'
     assert aprs.encode_altitude('123') == '/A=000123'
     assert aprs.encode_altitude(105000) == '/A=105000'
+
+def test_encode_course_and_speed():
+    assert aprs.encode_course_and_speed(34, 21) == '034/021'
+    assert aprs.encode_course_and_speed(0, 21) == '360/021'
+    assert aprs.encode_course_and_speed(1, 121) == '001/121'
+
+def test_make_info_string():
+    b = aprs.BalloonInfo()
+    b.call = 'N0CALL'
+    b.lat = '4903.50123N'
+    b.lon = '07201.7521W'
+    b.speed_knots = 156
+    b.altitude_in_feet = 75345
+    b.course = 65
+    dt = datetime.strptime("05/13/20 14:21:59", "%m/%d/%y %H:%M:%S")
+
+    assert aprs.make_info_string(b, dt) == '@142159h4903.50N/07201.75WO065/156/A=075345'
+
+def test_fcs():
+    data = b'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    fcs_digest = aprs.make_fcs(data)
+    assert fcs_digest == b'[\x07'
+
+def test_make_aprs_packet():
+    b = aprs.BalloonInfo()
+    b.call = 'N0CALL'
+    b.lat = '4903.50123N'
+    b.lon = '07201.7521W'
+    b.speed_knots = 156
+    b.altitude_in_feet = 75345
+    b.course = 65
+    dt = datetime.strptime("05/13/20 14:21:59", "%m/%d/%y %H:%M:%S")
+
+    packet = aprs.make_aprs_packet(b, "APRS", ["WIDE1-1", "WIDE2-1"], dt)
+    assert packet == b'~\x82\xa0\xa4\xa6@@`\x9c`\x86\x82\x98\x98`\xae\x92\x88\x8ab@b\xae\x92\x88\x8ad@c\x03\xf0@142159h4903.50N/07201.75WO065/156/A=075345!\xd3'
+    # assert packet == b'~\x82\xa0\xa4\xa6@@`\x9c`\x86\x82\x98\x98`\xae\x92\x88\x8ab@b\xae\x92\x88\x8ad@b\x03\xf0@142159h4903.50N/07201.75WO065/156/A=0753454L'
+
+    pretty_string = aprs.packet_to_string(packet)
+    assert pretty_string == "N0CALL-0>APRS-0 via:['WIDE1-1', 'WIDE2-1'] @142159h loc=4903.50N,07201.75W heading=065 speed=156 alt=075345"

@@ -1,5 +1,6 @@
-from bitstring import BitArray
+import struct
 from datetime import datetime
+from bitstring import BitArray
 
 #  the AX.25 frame
 # 1 byte      : flag = b'\x7e'
@@ -23,11 +24,15 @@ class BalloonInfo(object):
         self.call = ''
         self.lat = ''
         self.lon = ''
-        self.speed_kmh = ''
-        self.altitude = ''
+        self.speed_kmh = 0
+        self.speed_knots = 0
+        self.altitude_in_feet = 0
         self.temp_in = ''
         self.temp_out = ''
-        self.course = ''
+        self.course = 0
+
+def zulu_now():
+    return datetime.utcnow()
 
 def encode_call(addr):
     # split into (addr, ssid)
@@ -45,7 +50,9 @@ def encode_call(addr):
     call = f"{addr:6s}{ssid}".encode('ascii')
     call_bytes = BitArray(call)
     call_bytes.rol(1)
-    return call_bytes.tobytes()
+
+    # using bytearray makes it mutable.
+    return bytearray(call_bytes.tobytes())
 
 def decode_call(call_bytes):
     # read in and shift right one bit.
@@ -59,12 +66,30 @@ def decode_call(call_bytes):
     return f"{call}-{ssid}"
 
 def encode_digis(digis):
-    encoded_digi_array = [encode_call(d) for d in digis]
-    return b''.join(encoded_digi_array)
+    # encoded_digi_array = [encode_call(d) for d in digis]
+    # return b''.join(encoded_digi_array)
+
+    encoded_digi_array = bytearray(b''.join([encode_call(d) for d in digis]))
+
+    # saw this getting done somewhere...
+    # I don't think it should really matter. Here's why:
+    # during decode everything gets shifted one bit to the right, so this falls off.
+    # the argument for it was to know when the digis end, but the control field does
+    # a good job of that, so whatevs.
+    # I'm doing this for sake of compatibility.
+    encoded_digi_array[-1] |= 0x01
+
+    return encoded_digi_array
 
 def decode_digis(digis_bytes):
     if len(digis_bytes) % 7 != 0:
         raise RuntimeError(f"Invalid array length; cannot decode digis ({len(digis_bytes)}")
+
+    digis_bytes = bytearray(digis_bytes)  # make it mutable.
+
+    # unscrew the last byte.
+    digis_bytes[-1] &= 0xfe
+
     digis = [digis_bytes[n*7:(n+1)*7] for n in range(len(digis_bytes) // 7)]  # noqa: E226
     digis = [decode_call(d) for d in digis]
     return digis
@@ -130,25 +155,100 @@ def encode_altitude(alt_in_feet):
         alt_in_feet = str(alt_in_feet)
     return f"/A={alt_in_feet.zfill(6)}"
 
-def make_info_string(balloon):
+# Data extensions
+
+def encode_course_and_speed(course, speed_in_knots):
+    course %= 360
+    if course == 0:
+        course = 360
+    return f"{str(course).zfill(3)}/{str(speed_in_knots).zfill(3)}"
+
+## Put it all together
+
+def make_info_string(balloon, dt):
     # generally speaking, the aprs info section is like this:
     # 1 - data type id. we are going to want '/' which is pos w/timestamp (will include other nice things)
-    # n - aprs data
-    # 7 - aprs data extension
-    # m - aprs comment
+    # n - aprs data (position w/ timestamp). maybe figure out how do do compressed lat/lon/course/speed/range/alt.
+    # 7 - aprs data extension (course and speed)
+    # m - aprs comment (altitude)
     # everyone complains about base91, but it's only used for compressed lat/lon (ch9) and altitude in mic-e.
     # everyone should be complaining about the bit-shifting in addresses. that crap is madness.
-    return ''
+    symbol_table_id = '/'
+    symbol_code = 'O'
+    data = f"@{getHMS(dt)}"
+    data += f"{encode_latitude(balloon.lat)}{symbol_table_id}{encode_longitude(balloon.lon)}{symbol_code}"
+    data += f"{encode_course_and_speed(balloon.course, balloon.speed_knots)}"
+    data += f"{encode_altitude(balloon.altitude_in_feet)}"
+    # we still have room for 36-9=27 bytes in the comment.
+    return data
 
+def make_fcs(byte_data):
+    fcs = 0xffff
+    for byte in byte_data:
+        for i in range(7, -1, -1):
+            bit = (byte >> i) & 0x01 == 1
+            check = fcs & 0x1 == 1
+            fcs >>= 1
+            if check != bit:
+                fcs ^= 0x8408
 
-def make_aprs_packet(ballon_info, destination, via_digis):
-    return b"{flag}{dst}{src}{digis}{ctrl}{pcol}".format(
-        flag=FLAG,
-        dst=encode_call(destination),
-        src=encode_call(ballon_info.call),
-        digis=encode_digis(via_digis),
-        ctrl=CTRL,
-        pcol=PCOL
-    )
+    # make the digest
+    return struct.pack('<H', ~fcs % 2**16)
+
+def make_aprs_packet(ballon_info, destination, via_digis, zulu_dt):
+    dst = encode_call(destination)
+    src = encode_call(ballon_info.call)
+    digis = encode_digis(via_digis)
+
+    info = make_info_string(ballon_info, zulu_dt).encode('ascii')
+    # data = b"{dst}{src}{digis}{CTRL}{PCOL}{info}"
+    data = dst + src + digis + CTRL + PCOL + info
+    fcs = make_fcs(data)
+    # return f"{FLAG}{data}{fcs}".encode('ascii')
+    return FLAG + data + fcs
+
+def packet_to_string(p):
+    """
+    # 1 byte      : flag = b'\x7e'
+    # 7 bytes     : dest address, right padded, has a format
+    # 7 bytes     : source address, right padded, as a format
+    # 0-56 bytes  : digipeater addresses
+    # 1 byte      : control field = b'\x03'
+    # 1 byte      : protocol id = b'\xf0'
+    # 1-256 bytes : information field, format varies, but usually contains a header
+    # 2 bytes     : FCS checksum
+    # 1 byte      : flag, same as first.
+    """
+    i = 1  # start there because flag is at pos 0
+    dst = decode_call(p[i:i+7])  # noqa: E226
+    i += 7
+    src = decode_call(p[i:i+7])  # noqa: E226
+    i += 7
+    # digi addresses should fill it up until x03
+    mark = i
+
+    print(f"starting with i={i}")
+    while i < len(p) and p[i] != ord(CTRL):
+        i += 1
+    if i >= len(p):
+        raise RuntimeError("About to exceed array")
+    digis = decode_digis(p[mark:i])
+    i += 2
+    time = p[i:i+8].decode('ascii')  # noqa: E226
+    i += len(time)
+    lat = p[i:i+8].decode('ascii')  # noqa: E226
+    i += len(lat)
+    i += 1  # slash
+    lon = p[i:i+9].decode('ascii')  # noqa: E226
+    i += len(lon)
+    i += 1  # balloon type
+    course = p[i:i+3].decode('ascii')  # noqa: E226
+    i += len(course)
+    i += 1  # slash
+    speed = p[i:i+3].decode('ascii')  # noqa: E226
+    i += len(speed)
+    i += 3  # /A=
+    alt = p[i:i+6].decode('ascii')  # noqa: E226
+    return f"{src}>{dst} via:{digis} {time} loc={lat},{lon} heading={course} speed={speed} alt={alt}"
 
 
