@@ -18,43 +18,6 @@ CTRL = b'\x03'
 PCOL = b'\xf0'
 BASE_91_DIGITS = [chr(i + 33) for i in range(91)]
 
-class LatLon(object):
-    def __init__(self, s):
-        self.s = s
-
-    @property
-    def is_lat(self):
-        return self.direction in ['N', 'S']
-
-    @property
-    def direction(self):
-        return self.s[-1]
-
-    @property
-    def is_north(self):
-        return self.is_lat and self.direction == 'N'
-
-    @property
-    def sdegrees(self):
-        end = 2 if self.is_lat else 3
-        return self.s[0:end]
-
-    @property
-    def idegrees(self):
-        return int(self.sdegrees.lstrip('0'))
-
-    @property
-    def sminutes(self):
-        start = 2 if self.is_lat else 3
-        return self.s[start:-1]
-
-    @property
-    def fminutes(self):
-        return float(self.sminutes.strip('0'))
-
-    def __repr__(self):
-        return self.s
-
 class BalloonInfo(object):
     def __init__(self):
         self.call = ''
