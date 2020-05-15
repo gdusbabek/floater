@@ -1,6 +1,9 @@
+import os
 import struct
 from datetime import datetime
-from bitstring import BitArray
+from bitstring import BitArray, Bits
+import audiogen
+from floater import afsk
 
 #  the AX.25 frame
 # 1 byte      : flag = b'\x7e'
@@ -51,8 +54,7 @@ def encode_call(addr):
     call_bytes = BitArray(call)
     call_bytes.rol(1)
 
-    # using bytearray makes it mutable.
-    return bytearray(call_bytes.tobytes())
+    return call_bytes.tobytes()
 
 def decode_call(call_bytes):
     # read in and shift right one bit.
@@ -85,7 +87,7 @@ def decode_digis(digis_bytes):
     if len(digis_bytes) % 7 != 0:
         raise RuntimeError(f"Invalid array length; cannot decode digis ({len(digis_bytes)}")
 
-    digis_bytes = bytearray(digis_bytes)  # make it mutable.
+    digis_bytes = bytearray(digis_bytes)  # make it mutable so the next line works.
 
     # unscrew the last byte.
     digis_bytes[-1] &= 0xfe
@@ -195,60 +197,39 @@ def make_fcs(byte_data):
     # make the digest
     return struct.pack('<H', ~fcs % 2**16)
 
-def make_aprs_packet(ballon_info, destination, via_digis, zulu_dt):
+def packet(balloon_info, destination, via_digis, zulu_dt):
+    # these are bytes
     dst = encode_call(destination)
-    src = encode_call(ballon_info.call)
+    src = encode_call(balloon_info.call)
     digis = encode_digis(via_digis)
 
-    info = make_info_string(ballon_info, zulu_dt).encode('ascii')
-    # data = b"{dst}{src}{digis}{CTRL}{PCOL}{info}"
+    # info is a string, so be sure to convert it to bytes.
+    info = make_info_string(balloon_info, zulu_dt).encode('ascii')
+
     data = dst + src + digis + CTRL + PCOL + info
     fcs = make_fcs(data)
-    # return f"{FLAG}{data}{fcs}".encode('ascii')
-    return FLAG + data + fcs
 
-def packet_to_string(p):
-    """
-    # 1 byte      : flag = b'\x7e'
-    # 7 bytes     : dest address, right padded, has a format
-    # 7 bytes     : source address, right padded, as a format
-    # 0-56 bytes  : digipeater addresses
-    # 1 byte      : control field = b'\x03'
-    # 1 byte      : protocol id = b'\xf0'
-    # 1-256 bytes : information field, format varies, but usually contains a header
-    # 2 bytes     : FCS checksum
-    # 1 byte      : flag, same as first.
-    """
-    i = 1  # start there because flag is at pos 0
-    dst = decode_call(p[i:i+7])  # noqa: E226
-    i += 7
-    src = decode_call(p[i:i+7])  # noqa: E226
-    i += 7
-    # digi addresses should fill it up until x03
-    mark = i
+    # i hate myself.
+    def stuff(byte_data):
+        count = 0
+        for bit in afsk._as_bits(byte_data):
+            if bit:
+                count += 1
+            else:
+                count = 0
+            yield bit
+            if count == 5:
+                yield False
+                count = 0
 
-    print(f"starting with i={i}")
-    while i < len(p) and p[i] != ord(CTRL):
-        i += 1
-    if i >= len(p):
-        raise RuntimeError("About to exceed array")
-    digis = decode_digis(p[mark:i])
-    i += 2
-    time = p[i:i+8].decode('ascii')  # noqa: E226
-    i += len(time)
-    lat = p[i:i+8].decode('ascii')  # noqa: E226
-    i += len(lat)
-    i += 1  # slash
-    lon = p[i:i+9].decode('ascii')  # noqa: E226
-    i += len(lon)
-    i += 1  # balloon type
-    course = p[i:i+3].decode('ascii')  # noqa: E226
-    i += len(course)
-    i += 1  # slash
-    speed = p[i:i+3].decode('ascii')  # noqa: E226
-    i += len(speed)
-    i += 3  # /A=
-    alt = p[i:i+6].decode('ascii')  # noqa: E226
-    return f"{src}>{dst} via:{digis} {time} loc={lat},{lon} heading={course} speed={speed} alt={alt}"
+    return FLAG + BitArray(stuff(data + fcs)).tobytes() + FLAG
 
+def packet_to_wav(packet, file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    if os.path.exists(file_path):
+        raise RuntimeError(f"Could not remove {file_path}")
 
+    audio = afsk.encode(packet)
+    with open(file_path, 'wb') as f:
+        audiogen.sampler.write_wav(f, audio)
