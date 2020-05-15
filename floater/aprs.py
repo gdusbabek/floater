@@ -1,5 +1,8 @@
 import os
+import subprocess
 from datetime import datetime
+
+DIREWOLF_HOME = os.environ.get('DIREWOLF_HOME')
 
 class BalloonInfo(object):
     def __init__(self):
@@ -79,4 +82,23 @@ def make_info_string(balloon, dt):
     return data
 
 def make_direwolf_string(bln, dst, via_digis, dt):
-    return f"{bln.call}>{dst},{','.join(via_digis)}:{make_info_string(bln, dt)}"
+    s = f"{bln.call}>{dst},{','.join(via_digis)}:{make_info_string(bln, dt)}"
+    if len(bln.temp_in) > 0 and len(bln.temp_out) > 0:
+        s = f"{s} in={bln.temp_in} out={bln.temp_out}"
+    return s
+
+def make_wav(bln, dst, via_digis, dt, wav_path):
+    if not DIREWOLF_HOME:
+        raise RuntimeError('Cannot find direwolf. Check env (export DIREWOLF_HOME=...)')
+    dw_str = make_direwolf_string(bln, dst, via_digis, dt)
+    if os.path.exists(wav_path):
+        os.remove(wav_path)
+    if os.path.exists(wav_path):
+        raise RuntimeError('Could not remove old wav file')
+    # subprocess.check_output(f'echo -n {dw_str} | {DIREWOLF_HOME}/gen_packets -a 25 -o {wav_path} -', shell=True)
+    echo = subprocess.Popen(['echo', '-n', dw_str], stdout=subprocess.PIPE)
+    gen_packets = subprocess.Popen([f"{DIREWOLF_HOME}/gen_packets", '-a', '25', '-o', wav_path, '-'], stdin=echo.stdout)
+    echo.stdout.close()
+    gen_packets.communicate()
+    if not os.path.exists(wav_path):
+        raise RuntimeError('Could not generate wave file')

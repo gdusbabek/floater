@@ -58,5 +58,12 @@ def test_make_info_string(simple_balloon, simple_zulu):
 
 def test_make_direwolf_string(simple_balloon, simple_zulu):
     # echo -n "N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075345" | ./gen_packets -a 25 -o /tmp/test_file_3.wav -
-    direwolf_str = aprs.make_direwolf_string(simple_balloon, 'APRS', ["WIDE1-1", "WIDE2-1"], simple_zulu)
-    assert direwolf_str == 'N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075345 in=45 out=-23'
+    direwolf_str = aprs.make_direwolf_string(simple_balloon, 'APN25', ["WIDE1-1", "WIDE2-1"], simple_zulu)
+    assert direwolf_str == 'N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075345'
+
+def test_make_wav(simple_balloon, simple_zulu):
+    if not os.environ.get('DIREWOLF_HOME'):
+        return
+    wav_path = '/tmp/test_file_5.wav'
+    aprs.make_wav(simple_balloon, 'APN25', ['WIDE1-1', 'WIDE2-1'], simple_zulu, wav_path)
+    assert os.path.exists(wav_path)
