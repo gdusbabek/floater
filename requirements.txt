@@ -4,6 +4,4 @@ pyserial
 # RPi.GPIO
 pynmea2
 bitstring
-git+https://github.com/gdusbabek/audiogen.git@a307368a3a2df82f5c9c230f03ebbfb723aa7d39#egg=audiogen
-#git+https://github.com/gdusbabek/afsk.git@e5f402f96b57d245be2aefe81806944b7b975fcc#egg=afsk
 pytest
