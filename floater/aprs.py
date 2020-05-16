@@ -4,17 +4,25 @@ from datetime import datetime
 
 DIREWOLF_HOME = os.environ.get('DIREWOLF_HOME')
 
-class BalloonInfo(object):
+class State(object):
     def __init__(self):
         self.call = ''
-        self.lat = ''
         self.lon = ''
-        self.speed_kmh = 0
-        self.speed_knots = 0
-        self.altitude_in_feet = 0
+        self.lat = ''
+        self.ground_speed_knots = 0
+        self.ground_speed_kph = 0
+        self.timestamp = None
+        self.datestamp = None
+        self.sats = None
+        self.altitude_in_feet = None
         self.temp_in = ''
         self.temp_out = ''
         self.course = 0
+        self.radio_freq = 0.0
+
+    def __repr__(self):
+        return f"alt:{self.altitude} {self.lat},{self.lon} spd:{self.ground_speed_kph}({self.ground_speed_knots}) sats:{self.sats}"
+
 
 def zulu_now():
     return datetime.utcnow()

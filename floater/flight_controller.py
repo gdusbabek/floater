@@ -9,23 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 import gpio
 import gps
 import dra818
-
-class State(object):
-    def __init__(self):
-        self.lon = None
-        self.lat = None
-        self.ground_speed_knots = 0.0
-        self.ground_speed_kph = 0.0
-        self.timestamp = None
-        self.datestamp = None
-        self.sats = None
-        self.altitude = None
-
-        self.radio_freq = 0.0
-
-    def __repr__(self):
-        return f"alt:{self.altitude} {self.lat},{self.lon} spd:{self.ground_speed_kph}({self.ground_speed_knots}) sats:{self.sats}"
-
+import aprs
 
 def check_devices():
     pass
@@ -92,7 +76,7 @@ def main(args):
 
     check_devices()
     last_sstv = 0
-    state = State()
+    state = aprs.State()
 
     while True:
         loop_start = time.time()

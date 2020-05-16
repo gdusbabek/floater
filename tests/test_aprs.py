@@ -8,7 +8,7 @@ import floater.aprs as aprs
 
 @pytest.fixture
 def simple_balloon():
-    b = aprs.BalloonInfo()
+    b = aprs.State()
     b.call = 'N0CALL'
     b.lat = '4903.50123N'
     b.lon = '07201.7521W'
