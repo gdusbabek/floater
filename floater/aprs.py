@@ -14,7 +14,6 @@ class State(object):
         self.timestamp = None
         self.datestamp = None
         self.sats = None
-        self.altitude_in_feet = None
         self.raw_altitude = ''
         self.temp_in = ''
         self.temp_out = ''

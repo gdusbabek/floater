@@ -13,7 +13,6 @@ def simple_balloon():
     b.lat = '4903.50123N'
     b.lon = '07201.7521W'
     b.speed_knots = 156
-    # b.altitude_in_feet = 75345
     b.raw_altitude = str(int(round(75344 / 3.28084))) + 'M'
     b.course = 65
     return b
