@@ -39,9 +39,9 @@ def update_gps(state):
         if hasattr(msg, 'num_sats'):
             state.sats = msg.num_sats
         if hasattr(msg, 'altitude'):
-            state.altitude = msg.altitude
+            state.raw_altitude = msg.altitude
         if hasattr(msg, 'altitude_units'):
-            state.altitude = str(state.altitude) + msg.altitude_units
+            state.raw_altitude = str(state.raw_altitude) + msg.altitude_units
 
         if time.time() - start_time > 10000:
             break
@@ -49,7 +49,8 @@ def update_gps(state):
     logging.debug(repr(state))
 
 def update_temps(state):
-    pass
+    state.temp_in = 0
+    state.temp_out = 0
 
 
 def send_aprs(state):
