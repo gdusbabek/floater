@@ -135,7 +135,7 @@ if __name__ == '__main__':
         logging.info("Enabling GPS. Check out /dev/ttyAMA0")
         gpio.init_pins()
         gpio.enable_gps()
-        line_count = 100
+        line_count = 50
         for msg in gps.collect(duration_secs=250):
             line_count -= 1
             logging.debug(repr(msg))
@@ -145,10 +145,20 @@ if __name__ == '__main__':
         logging.info("Testing VHF. Short broadcast on 146.500MHz")
         gpio.init_pins()
         gpio.enable_vhf()
-        ok = dra818.program(frequency=146.500)
+        ok = False
+        program_tries = 4
+        while program_tries > 0 and not ok:
+            program_tries -= 1
+            try:
+                ok = dra818.program(frequency=146.500)
+            except:
+                logging.warning(f"Programming failed. {program_tries} tries left.")
+                time.sleep(1)
+
         if not ok:
             logging.error("Problem programming")
             sys.exit(1)
+        logging.info("Programed OK")
         dra818.ptt(True)
         time.sleep(5)
         dra818.ptt(False)
