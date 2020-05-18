@@ -11,8 +11,8 @@ Some of the code works.
 - [x] get serious about some tests and project structure.
 - [x] convert gps data into state
 - [x] generate APRS wav
-- [ ] collect gps to object
-- [ ] collect temperatures to object
+- [x] collect gps to object
+- [ ] collect temperatures to object (waiting on 4.7k resistors)
 - [ ] send APRS wav
 - [ ] capture image
 - [ ] send image as sstv

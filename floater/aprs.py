@@ -1,6 +1,7 @@
 import os
 import subprocess
 from datetime import datetime
+import logging
 
 DIREWOLF_HOME = os.environ.get('DIREWOLF_HOME')
 
@@ -20,9 +21,17 @@ class State(object):
         self.course = 0
         self.radio_freq = 0.0
 
-    def __repr__(self):
-        return f"alt:{self.altitude} {self.lat},{self.lon} spd:{self.ground_speed_kph}({self.ground_speed_knots}) sats:{self.sats}"
+        self.last_photo_time = 0
+        self.last_video_time = 0
+        self.last_sstv_time = 0
+        self.will_send_sstv = False
 
+    def __repr__(self):
+        return f"alt:{self.raw_altitude} {self.lat},{self.lon} spd:{self.ground_speed_kph}({self.ground_speed_knots}) sats:{self.sats}"
+
+    def is_valid(self):
+        return len(self.lon.strip()) > 0 and \
+            len(self.lat.strip()) > 0
 
 def zulu_now():
     return datetime.utcnow()
@@ -37,14 +46,18 @@ def getDHM(dt):
 # 2934.94157N,09817.02034W
 
 def _encode_arbitrary_location(lonlat, w):
-    dm, h = lonlat.split('.')
-    d = h[-1].upper()  # direction
-    h = h[:-1]  # git rid of direction
-    while len(dm) < w:
-        dm += '0'
-    while len(h) > 2:
-        h = h[:-1]
-    return f"{dm}.{h}{d}"
+    try:
+        dm, h = lonlat.split('.')
+        d = h[-1].upper()  # direction
+        h = h[:-1]  # git rid of direction
+        while len(dm) < w:
+            dm += '0'
+        while len(h) > 2:
+            h = h[:-1]
+        return f"{dm}.{h}{d}"
+    except ValueError:
+        logging.error(f'Problem encoding this: {lonlat}   {w}')
+        return '0'
 
 def encode_latitude(lat):
     """ input will probably be ddmm.hhhhhN, convert it into ddmm.hhM """
@@ -63,8 +76,10 @@ def encode_altitude(alt_in_feet):
     return f"/A={alt_in_feet.zfill(6)}"
 
 def alt_to_feet(alt):
-    if alt.lower().endswith('m'):
-        return int(round(int(alt[:-1]) * 3.28084))
+    if alt is None:
+        return 0
+    elif alt.lower().endswith('m'):
+        return int(round(int(float(alt[:-1])) * 3.28084))
     else:
         return int(alt[:-1])
 
@@ -90,15 +105,14 @@ def make_info_string(balloon, dt):
     symbol_code = 'O'
     data = f"@{getHMS(dt)}"
     data += f"{encode_latitude(balloon.lat)}{symbol_table_id}{encode_longitude(balloon.lon)}{symbol_code}"
-    data += f"{encode_course_and_speed(balloon.course, balloon.speed_knots)}"
+    data += f"{encode_course_and_speed(balloon.course, balloon.ground_speed_knots)}"
     data += f"{encode_altitude(alt_to_feet(balloon.raw_altitude))}"
     # we still have room for 36-9=27 bytes in the comment.
     return data
 
 def make_direwolf_string(bln, dst, via_digis, dt):
     s = f"{bln.call}>{dst},{','.join(via_digis)}:{make_info_string(bln, dt)}"
-    if len(bln.temp_in) > 0 and len(bln.temp_out) > 0:
-        s = f"{s} sat={bln.num_sats} in={bln.temp_in} out={bln.temp_out}"
+    s += f" sat={bln.sats} in={bln.temp_in} out={bln.temp_out} sstv={1 if bln.will_send_sstv else 0}"
     return s
 
 def make_wav(bln, dst, via_digis, dt, wav_path):

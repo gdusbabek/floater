@@ -3,6 +3,8 @@ import sys
 import argparse
 import serial
 import time
+from datetime import datetime
+import traceback
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -10,6 +12,7 @@ import gpio
 import gps
 import dra818
 import aprs
+import cam
 
 def check_devices():
     pass
@@ -19,7 +22,6 @@ def update_gps(state):
     logging.info("Taking GPS reading")
     start_time = time.time()
     for msg in gps.collect():
-        # logging.debug(f"MSG: {repr(msg)}")
         if hasattr(msg, 'lat'):
             state.lat = msg.lat
         if hasattr(msg, 'lon'):
@@ -46,19 +48,30 @@ def update_gps(state):
         if time.time() - start_time > 10000:
             break
     logging.debug("Done with reading.")
-    logging.debug(repr(state))
 
 def update_temps(state):
     state.temp_in = 0
     state.temp_out = 0
 
+def capture_photo(state):
+    photo_path = cam.capture_photo()
+    logging.info(f"Captured photo to: {photo_path}.")
+    state.last_photo_time = time.time()
+    state.last_photo_path = photo_path
+
+def capture_video(state):
+    video_path = cam.capture_video()
+    logging.info(f"Captured video to: {video_path}.")
+    state.last_video_time = time.time()
+    state.last_video_path = video_path
 
 def send_aprs(state):
-    pass
+    aprs_string = aprs.make_direwolf_string(state, 'APN25', ['WIDE1-1'], datetime.utcnow())
+    logging.info(f'APRSing {{{aprs_string}}}')
 
 
 def send_sstv(state):
-    pass
+    logging.info(f'SSTV send not implemented, but would send {state.last_photo_path}')
 
 
 def restart_pi():
@@ -67,6 +80,7 @@ def restart_pi():
 
 def main(args):
 
+    logging.info("Welcome to the main event!")
     try:
         gpio.init_pins()
         logging.info("Pi GPIO initialized. Checking devices.")
@@ -76,20 +90,37 @@ def main(args):
         restart_pi()
 
     check_devices()
-    last_sstv = 0
     state = aprs.State()
 
     while True:
         loop_start = time.time()
         try:
+            low_disk = False  # TODO: implement this check.
+            state.will_send_sstv = loop_start - state.last_sstv_time > 300000
             update_gps(state)
             update_temps(state)
-            send_aprs(state)
-            if (time.time() - last_sstv) > 300000:
-                last_sstv = time.time()
+            logging.info('gps and temperatures recorded')
+            if state.is_valid():
+                send_aprs(state)
+            else:
+                logging.warn("Invalid state. Will not APRS")
+                logging.warn(f'{repr(state)}')
+            logging.info('beacon sent')
+            capture_photo(state)
+            if state.will_send_sstv:
+                logging.info('starting sstv send')
                 send_sstv(state)
+                logging.info('sstv send completed')
+                state.last_sstv_time = time.time()
+            if not low_disk and loop_start - state.last_video_time > 300000:
+                logging.info('capturing video')
+                capture_video(state)
+                state.last_video_time = time.time()
         except:
-            pass
+            # ugh.
+            traceback.print_exc()
+
+        logging.debug(repr(state))
 
         # maybe take a nap.
         loop_end = time.time()
@@ -106,6 +137,8 @@ if __name__ == '__main__':
     parser.add_argument("--init", action="store_true", default=False, help="Initializes UART multiplexers to a safe state")
     parser.add_argument("--test-gps", action="store_true", default=False, help="Tests the GPS")
     parser.add_argument("--test-vhf", action="store_true", default=False, help="Test VHF radio with a short broadcast to 146.500")
+    parser.add_argument("--test-photo", action="store_true", default=False, help="Capture a test photo")
+    parser.add_argument("--test-video", action="store_true", default=False, help="Capture a test video")
 
     parser.add_argument("--aprs-frequency", type=float, default=144.390, help="APRS Transmit Frequency (MHz)")
     parser.add_argument("--sstv-frequency", type=float, default=146.500, help="Frequency used to send SSTV images")
@@ -147,6 +180,12 @@ if __name__ == '__main__':
         dra818.ptt(True)
         time.sleep(5)
         dra818.ptt(False)
+    elif args.test_photo:
+        photo_path = cam.capture_photo()
+        logging.info(f"Captured test photo: {photo_path}.")
+    elif args.test_video:
+        video_path = cam.capture_video()
+        logging.info(f"Captured test video: {video_path}.")
     else:
         main(args)
         sys.exit(0)

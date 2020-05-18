@@ -1,7 +1,10 @@
 # if you're on chromeos, things go more smoothly with wheel.
 wheel
 pyserial
-# RPi.GPIO
 pynmea2
 bitstring
 pytest
+
+# raspberry pi only.
+# RPi.GPIO
+# picamera
