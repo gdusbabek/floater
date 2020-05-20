@@ -3,6 +3,7 @@ wheel
 pyserial
 pynmea2
 bitstring
+PySSTV
 pytest
 
 # raspberry pi only.
