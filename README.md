@@ -3,6 +3,10 @@
 This is still very much a WIP.
 Some of the code works.
 
+## Dependencies
+
+* Imagemagick
+
 ## Punchlist
 
 - [x] mux control logic
