@@ -1,7 +1,6 @@
 
 import sys
 import argparse
-import serial
 import time
 from datetime import datetime
 import traceback
@@ -20,7 +19,7 @@ def check_devices():
 
 def update_gps(state):
     gpio.enable_gps()
-    logging.info("Taking GPS reading")
+    logging.debug("Taking GPS reading")
     start_time = time.time()
     for msg in gps.collect():
         if hasattr(msg, 'lat'):
@@ -51,6 +50,7 @@ def update_gps(state):
     logging.debug("Done with reading.")
 
 def update_temps(state):
+    logging.debug("Getting temparatures")
     state.temp_in = therm.get_internal_temp()
     state.temp_out = therm.get_external_temp()
 
@@ -81,6 +81,10 @@ def restart_pi():
 
 def main(args):
 
+    if args.call is None:
+        logging.critical("You need to set the `call` parameter. ")
+        sys.exit(-1)
+
     logging.info("Welcome to the main event!")
     try:
         gpio.init_pins()
@@ -92,6 +96,8 @@ def main(args):
 
     check_devices()
     state = aprs.State()
+
+    state.call = args.call
 
     while True:
         loop_start = time.time()
@@ -142,6 +148,8 @@ if __name__ == '__main__':
     parser.add_argument("--test-video", action="store_true", default=False, help="Capture a test video")
     parser.add_argument("--test-therm", action="store_true", default=False, help="Display temperatures")
 
+    parser.add_argument("--call", type=str, help="Call sign + SSID of balloon. e.g. N0CALL-1")
+
     parser.add_argument("--aprs-frequency", type=float, default=144.390, help="APRS Transmit Frequency (MHz)")
     parser.add_argument("--sstv-frequency", type=float, default=146.500, help="Frequency used to send SSTV images")
     parser.add_argument("--uart-device", type=str, default='/dev/ttyAMA0', help="Serial port connected to module.")
@@ -165,17 +173,7 @@ if __name__ == '__main__':
         logging.info("Testing VHF. Short broadcast on 146.500MHz")
         gpio.init_pins()
         gpio.enable_vhf()
-        ok = False
-        program_tries = 4
-        while program_tries > 0 and not ok:
-            program_tries -= 1
-            try:
-                ok = dra818.program(frequency=146.500)
-            except:
-                logging.warning(f"Programming failed. {program_tries} tries left.")
-                time.sleep(1)
-
-        if not ok:
+        if not dra818.program(frequency=146.500):
             logging.error("Problem programming")
             sys.exit(1)
         logging.info("Programed OK")

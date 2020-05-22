@@ -37,19 +37,27 @@ def _handshake(uart):
     return _send_rcv(uart, "AT+DMOCONNECT\r\n")
 
 
-def program(port=DEFAULT_UART_PORT, frequency=146.500):
-    uart = _open_uart(port)
-    res = _handshake(uart).decode("utf-8").strip()
-    if res != "+DMOCONNECT:0":
-        logging.error("Unable to communicate with DRA818.")
-        return False
-
-    group_set_cmd = group_set_cmd = "AT+DMOSETGROUP=%d,%3.4f,%3.4f,%s,%d,%s\r\n" % (MODE, frequency, frequency, CTCSS, SQUELCH, CTCSS)
-    res = _send_rcv(uart, group_set_cmd).decode('utf-8').strip()
-    if res != "+DMOSETGROUP:0":
-        logging.error("Unable to program DRA818")
-        return False
-    return True
+def program(port=DEFAULT_UART_PORT, frequency=146.500, tries=4):
+    ok = False
+    while tries > 0 and not ok:
+        tries -= 1
+        try:
+            uart = _open_uart(port)
+            res = _handshake(uart).decode("utf-8").strip()
+            if res != "+DMOCONNECT:0":
+                logging.error("Unable to communicate with DRA818.")
+            else:
+                group_set_cmd = group_set_cmd = "AT+DMOSETGROUP=%d,%3.4f,%3.4f,%s,%d,%s\r\n" % (MODE, frequency, frequency, CTCSS, SQUELCH, CTCSS)
+                res = _send_rcv(uart, group_set_cmd).decode('utf-8').strip()
+                if res != "+DMOSETGROUP:0":
+                    logging.error("Unable to program DRA818")
+                else:
+                    ok = True
+        except:
+            logging.waring(f"Programming VHF failed. {tries} tries left.")
+        if not ok:
+            time.sleep(0.5)
+    return ok
 
 def ptt(enabled):
     gpio.set_pin(PTT, gpio.LOW if enabled else gpio.HIGH)
