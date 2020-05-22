@@ -6,6 +6,7 @@ Some of the code works.
 ## Dependencies
 
 * Imagemagick
+* Direwolf
 
 ## Punchlist
 
@@ -22,7 +23,6 @@ Some of the code works.
 - [x] capture image
 - [x] image to wav
 - [ ] send image as sstv
-- [ ] capture temperature
 - [ ] battery meter solution (for desperate measures)
 - [ ] logic around emergency shutdown, power-up etc.
 - [ ] configuration file.
