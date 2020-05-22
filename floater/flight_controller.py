@@ -13,6 +13,7 @@ import gps
 import dra818
 import aprs
 import cam
+import therm
 
 def check_devices():
     pass
@@ -50,8 +51,8 @@ def update_gps(state):
     logging.debug("Done with reading.")
 
 def update_temps(state):
-    state.temp_in = 0
-    state.temp_out = 0
+    state.temp_in = therm.get_internal_temp()
+    state.temp_out = therm.get_external_temp()
 
 def capture_photo(state):
     photo_path = cam.capture_photo()
@@ -139,6 +140,7 @@ if __name__ == '__main__':
     parser.add_argument("--test-vhf", action="store_true", default=False, help="Test VHF radio with a short broadcast to 146.500")
     parser.add_argument("--test-photo", action="store_true", default=False, help="Capture a test photo")
     parser.add_argument("--test-video", action="store_true", default=False, help="Capture a test video")
+    parser.add_argument("--test-therm", action="store_true", default=False, help="Display temperatures")
 
     parser.add_argument("--aprs-frequency", type=float, default=144.390, help="APRS Transmit Frequency (MHz)")
     parser.add_argument("--sstv-frequency", type=float, default=146.500, help="Frequency used to send SSTV images")
@@ -186,6 +188,9 @@ if __name__ == '__main__':
     elif args.test_video:
         video_path = cam.capture_video()
         logging.info(f"Captured test video: {video_path}.")
+    elif args.test_therm:
+        logging.info(f"Internal temp: {therm.get_internal_temp()}")
+        logging.info(f"External temp: {therm.get_external_temp()}")
     else:
         main(args)
         sys.exit(0)

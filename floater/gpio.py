@@ -42,10 +42,10 @@ LOW                 = GPIO.LOW
 
 # We are using the Broadcom (BCM) layout.
 
-TEMP_A              = 2  # PHYS 3
-TEMP_B              = 3  # PHYS 5
+TEMP_DATA           = 4  # PHYS 7
+TEMP_VCC            = 25 # PHYS 22
 
-TX_MUX_E            = 4  # PHYS 7
+TX_MUX_E            = 3  # PHYS 5
 TX_MUX_S0           = 17 # PHYS 11
 TX_MUX_S1           = 27 # PHYS 13
 TX_MUX_S2           = 22 # PHYS 15
@@ -68,6 +68,7 @@ Y2_PINS             = (GPIO.LOW, GPIO.HIGH, GPIO.LOW)
 
 GPS_PINS = Y1_PINS
 VHF_PINS = Y2_PINS
+
 
 def init_pins():
     '''
@@ -100,10 +101,13 @@ def init_pins():
     GPIO.setup(RX_MUX_S1, GPIO.OUT, initial=GPIO.LOW)
     GPIO.setup(RX_MUX_S2, GPIO.OUT, initial=GPIO.LOW)
 
+    # Manually give power to the temperature sensor
+    # This is a hack as I ran out of 3.3v rails. :(
+    GPIO.setup(TEMP_VCC, GPIO.OUT, initial=GPIO.HIGH)
+
     # It's tempting, but please don't mess with the uart pins.
     # GPIO.setup(TX_MUX_Z, GPIO.OUT, initial=GPIO.LOW)
     # GPIO.setup(RX_MUX_Z, GPIO.IN, initial=GPIO.LOW)
-
 
 
 def clear_uart():

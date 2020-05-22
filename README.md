@@ -18,7 +18,7 @@ Some of the code works.
 - [ ] figure out correct APRS destination and digis.
 - [x] generate APRS wav
 - [x] collect gps to object
-- [ ] collect temperatures to object (waiting on 4.7k resistors)
+- [x] collect temperatures to object (wire in 18b20)
 - [ ] send APRS wav
 - [x] capture image
 - [x] image to wav
