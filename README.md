@@ -50,3 +50,8 @@ Copy images and stuff back:
 ```bash
 scp pi@192.168.86.32:/home/pi/Pictures/photos/capture_0139.jpg ~/Desktop/test_photos/
 ```
+
+## Using Direwolf is cheating
+
+I know. I have a [branch](https://github.com/gdusbabek/floater/tree/native_afsk) that has a native
+APRS + AX.25 + AFSK implementation, but the wav files that get generated are worthless. :(
