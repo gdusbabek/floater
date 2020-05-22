@@ -16,6 +16,7 @@ Some of the code works.
 - [x] get serious about some tests and project structure.
 - [x] convert gps data into state
 - [ ] figure out correct APRS destination and digis.
+- [ ] generate APRS telemetry messages.
 - [x] generate APRS wav
 - [x] collect gps to object
 - [x] collect temperatures to object (wire in 18b20)
