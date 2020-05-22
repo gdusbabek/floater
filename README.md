@@ -24,6 +24,7 @@ Some of the code works.
 - [x] capture image
 - [x] image to wav
 - [ ] send image as sstv
+- [ ] video capture is not happening according to schedule.
 - [ ] battery meter solution (for desperate measures)
 - [ ] logic around emergency shutdown, power-up etc.
 - [ ] configuration file.
