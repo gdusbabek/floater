@@ -24,9 +24,11 @@ Some of the code works.
 - [x] capture image
 - [x] image to wav
 - [ ] send image as sstv
+- [ ] preflight check for devices.
 - [ ] video capture is not happening according to schedule.
 - [ ] battery meter solution (for desperate measures)
 - [ ] logic around emergency shutdown, power-up etc.
+- [ ] automation around initial set up.
 - [ ] configuration file.
 
 ## Run things on the tracker
