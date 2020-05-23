@@ -22,6 +22,7 @@ class State(object):
         self.radio_freq = 0.0
 
         self.last_photo_time = 0
+        self.last_photo_path = None
         self.last_video_time = 0
         self.last_sstv_time = 0
         self.will_send_sstv = False

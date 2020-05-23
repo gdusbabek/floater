@@ -24,8 +24,9 @@ Some of the code works.
 - [x] physically connect sound to radio.
 - [x] capture image
 - [x] image to wav
-- [ ] create sstv reception station.
-- [ ] send image as sstv
+- [x] create sstv reception station.
+- [x] send image as sstv
+- [ ] improve message quality on sstv picture.
 - [ ] preflight check for devices.
 - [ ] video capture is not happening according to schedule.
 - [ ] battery meter solution (for desperate measures)

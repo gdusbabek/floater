@@ -1,4 +1,8 @@
 import subprocess
+import os
+import logging
+
+PYTHONHOME = os.environ.get('PYTHONHOME', '/home/pi/tracker_env/bin')
 
 def annotate_img(img_src, img_dest, info):
     """
@@ -16,6 +20,11 @@ def annotate_img(img_src, img_dest, info):
 def img_to_wav(img_path, wav_path):
     """
     pi images default to 1280 × 720.
-    This does Martin M!, 16 bits per sample at 48k.
+    This does Martin M1, 16 bits per sample at 48k.
     """
-    subprocess.check_output(['python', '-m', 'pysstv', '--resize', img_path, wav_path])
+    try:
+        subprocess.check_output([os.path.join(PYTHONHOME, 'python'), '-m', 'pysstv', '--resize', img_path, wav_path])
+        return True
+    except subprocess.CalledProcessError as ex:
+        logging.error(ex.output)
+        return False

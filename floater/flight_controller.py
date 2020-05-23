@@ -1,4 +1,4 @@
-
+import os
 import sys
 import argparse
 import time
@@ -13,6 +13,7 @@ import dra818
 import aprs
 import cam
 import therm
+import sstv
 
 def check_devices():
     pass
@@ -81,20 +82,63 @@ def send_aprs(state, aprs_dst='APN25', digis=['WIDE1-1']):
 
     if not dra818.program(frequency=146.500):
         logging.error("Problem programming")
-        sys.exit(1)
+        return
     logging.info(f'Sending APRS: {{{aprs_string}}}')
     dra818.ptt(True)
     try:
-        time.sleep(0.25)
+        time.sleep(1)
         dra818.play_file(wav_path)
         time.sleep(0.25)
     except:
         traceback.print_exc()
     dra818.ptt(False)
 
+def _maybe_delete(file_path, raise_error=False):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    if os.path.exists(file_path):
+        if raise_error:
+            raise RuntimeError(f'File not deleted: {file_path}')
+        else:
+            return False
+    else:
+        return True
+
 
 def send_sstv(state):
-    logging.info(f'SSTV send not implemented, but would send {state.last_photo_path}')
+    if state.last_photo_path is None:
+        logging.warning('Would like to send SSTV, but nothing is there')
+        return
+    sstv_img_path = '/tmp/sstv.jpg'
+    if not _maybe_delete(sstv_img_path):
+        logging.error(f'Could not clear old SSTV image: {sstv_img_path}')
+        return
+
+    anno_str = f'{state.call} alt:{state.raw_altitude} {state.lon} {state.lat} {state.course} {state.temp_out} {state.timestamp}'
+    logging.info('annotating image')
+    sstv.annotate_img(state.last_photo_path, sstv_img_path, anno_str)
+    sstv_wav_path = '/tmp/sstv.wav'
+    if not _maybe_delete(sstv_wav_path):
+        logging.error(f'Could not clear old SSTV wav: {sstv_wav_path}')
+        return
+    logging.info('converting image to wav')
+    if not sstv.img_to_wav(sstv_img_path, sstv_wav_path):
+        logging.error('Could not generate SSTV wav file. Aborting SSTV send.')
+        return
+
+    gpio.enable_vhf()
+    if not dra818.program(frequency=146.500):
+        logging.error('Problem programming')
+        return
+    logging.info('Sending SSTV')
+    dra818.ptt(True)
+    try:
+        time.sleep(1)
+        dra818.play_file(sstv_wav_path)
+        time.sleep(1)
+    except:
+        traceback.print_exc()
+    dra818.ptt(False)
 
 
 def restart_pi():
