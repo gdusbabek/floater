@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import traceback
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%H:%M:%S')
 
 import gpio
 import gps
@@ -14,6 +14,9 @@ import aprs
 import cam
 import therm
 import sstv
+
+MINUTES_30 = 30 * 60
+MINUTES_5 = 5 * 60
 
 def check_devices():
     pass
@@ -104,7 +107,6 @@ def _maybe_delete(file_path, raise_error=False):
     else:
         return True
 
-
 def send_sstv(state):
     if state.last_photo_path is None:
         logging.warning('Would like to send SSTV, but nothing is there')
@@ -114,7 +116,7 @@ def send_sstv(state):
         logging.error(f'Could not clear old SSTV image: {sstv_img_path}')
         return
 
-    anno_str = f'{state.call} alt:{state.raw_altitude} {state.lon} {state.lat} {state.course} {state.temp_out} {state.timestamp}'
+    anno_str = f'{state.call} {state.raw_altitude} {aprs.encode_longitude(state.lon)},{aprs.encode_latitude(state.lat)}'
     logging.info('annotating image')
     sstv.annotate_img(state.last_photo_path, sstv_img_path, anno_str)
     sstv_wav_path = '/tmp/sstv.wav'
@@ -169,7 +171,7 @@ def main(args):
         loop_start = time.time()
         try:
             low_disk = False  # TODO: implement this check.
-            state.will_send_sstv = loop_start - state.last_sstv_time > 300000
+            state.will_send_sstv = loop_start - state.last_sstv_time > MINUTES_30
             update_gps(state)
             update_temps(state)
             logging.info('gps and temperatures recorded')
@@ -185,7 +187,7 @@ def main(args):
                 send_sstv(state)
                 logging.info('sstv send completed')
                 state.last_sstv_time = time.time()
-            if not low_disk and loop_start - state.last_video_time > 300000:
+            if not low_disk and loop_start - state.last_video_time > MINUTES_5:
                 logging.info('capturing video')
                 capture_video(state)
                 state.last_video_time = time.time()

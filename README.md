@@ -26,12 +26,17 @@ Some of the code works.
 - [x] image to wav
 - [x] create sstv reception station.
 - [x] send image as sstv
-- [ ] improve message quality on sstv picture.
+- [x] improve message quality on sstv picture.
+- [ ] more tests
+- [ ] cruise detection
+- [ ] descent detection
 - [ ] preflight check for devices.
 - [ ] video capture is not happening according to schedule.
 - [ ] battery meter solution (for desperate measures)
 - [ ] logic around emergency shutdown, power-up etc.
-- [ ] automation around initial set up.
+- [ ] automation around initial set up:
+- [ ] floater starts on boot
+- [ ] floater reboots when things get really bad
 - [ ] configuration file.
 
 ## Run things on the tracker
