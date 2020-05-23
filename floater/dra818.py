@@ -1,7 +1,10 @@
-import serial
+import os
 import time
+import subprocess
+import serial
 import gpio
 import logging
+
 
 DEFAULT_UART_PORT = "/dev/ttyAMA0"
 
@@ -14,6 +17,8 @@ CTCSS = '0000'
 PTT     = 6
 HL      = 13
 PD      = 19
+
+MINUTES_30 = 1800
 
 def _open_uart(device=DEFAULT_UART_PORT):
     return serial.Serial(
@@ -54,10 +59,18 @@ def program(port=DEFAULT_UART_PORT, frequency=146.500, tries=4):
                 else:
                     ok = True
         except:
-            logging.waring(f"Programming VHF failed. {tries} tries left.")
+            logging.warning(f"{tries} programming tries left.")
         if not ok:
             time.sleep(0.5)
     return ok
 
 def ptt(enabled):
     gpio.set_pin(PTT, gpio.LOW if enabled else gpio.HIGH)
+
+def play_file(wav_path, device='plughw:CARD=Set,DEV=0'):
+    if not os.path.isfile(wav_path):
+        logging.error(f"Problem with file {wav_path}")
+        return False
+    subprocess.check_output(['aplay', '-D', device, wav_path], shell=False, timeout=MINUTES_30)
+    return True
+

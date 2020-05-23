@@ -12,7 +12,7 @@ def simple_balloon():
     b.call = 'N0CALL'
     b.lat = '4903.50123N'
     b.lon = '07201.7521W'
-    b.speed_knots = 156
+    b.ground_speed_knots = 156
     b.raw_altitude = str(int(round(75344 / 3.28084))) + 'M'
     b.course = 65
     return b
@@ -58,12 +58,14 @@ def test_make_info_string(simple_balloon, simple_zulu):
 
 def test_make_direwolf_string(simple_balloon, simple_zulu):
     # echo -n "N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075345" | ./gen_packets -a 25 -o /tmp/test_file_3.wav -
-    direwolf_str = aprs.make_direwolf_string(simple_balloon, 'APN25', ["WIDE1-1", "WIDE2-1"], simple_zulu)
-    assert direwolf_str == 'N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075344'
+    actual = aprs.make_direwolf_string(simple_balloon, 'APN25', ["WIDE1-1", "WIDE2-1"], simple_zulu)
+    expected = 'N0CALL>APN25,WIDE1-1,WIDE2-1:@142159h4903.50N/07201.75WO065/156/A=075344 sat=None in= out= sstv=0'
+    assert actual == expected
 
 def test_make_wav(simple_balloon, simple_zulu):
     if not os.environ.get('DIREWOLF_HOME'):
         return
     wav_path = '/tmp/test_file_5.wav'
-    aprs.make_wav(simple_balloon, 'APN25', ['WIDE1-1', 'WIDE2-1'], simple_zulu, wav_path)
+    aprs_string = aprs.make_direwolf_string(simple_balloon, 'APN25', ['WIDE1-1', 'WIDE2-1'], simple_zulu)
+    aprs.make_wav(aprs_string, wav_path)
     assert os.path.exists(wav_path)

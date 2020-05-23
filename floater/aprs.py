@@ -115,18 +115,37 @@ def make_direwolf_string(bln, dst, via_digis, dt):
     s += f" sat={bln.sats} in={bln.temp_in} out={bln.temp_out} sstv={1 if bln.will_send_sstv else 0}"
     return s
 
-def make_wav(bln, dst, via_digis, dt, wav_path):
+def make_wav(aprs_string, wav_path):
     if not DIREWOLF_HOME:
         raise RuntimeError('Cannot find direwolf. Check env (export DIREWOLF_HOME=...)')
-    dw_str = make_direwolf_string(bln, dst, via_digis, dt)
     if os.path.exists(wav_path):
         os.remove(wav_path)
     if os.path.exists(wav_path):
         raise RuntimeError('Could not remove old wav file')
     # subprocess.check_output(f'echo -n {dw_str} | {DIREWOLF_HOME}/gen_packets -a 25 -o {wav_path} -', shell=True)
-    echo = subprocess.Popen(['echo', '-n', dw_str], stdout=subprocess.PIPE)
-    gen_packets = subprocess.Popen([f"{DIREWOLF_HOME}/gen_packets", '-a', '25', '-o', wav_path, '-'], stdin=echo.stdout)
-    echo.stdout.close()
-    gen_packets.communicate()
+
+    aprs_text_path = f"{wav_path}.txt"
+    if os.path.exists(aprs_text_path):
+        os.remove(aprs_text_path)
+    if os.path.exists(aprs_text_path):
+        raise RuntimeError('Could not remove old APRS text file')
+    with open(aprs_text_path, 'w') as f:
+        f.write(aprs_string)
+        f.close()
+    if not os.path.exists(aprs_text_path):
+        raise RuntimeError('APRS text file not written')
+
+    try:
+        res = subprocess.check_output([f"{DIREWOLF_HOME}/gen_packets", '-a', '25', '-o', wav_path, aprs_text_path], shell=False)
+        logging.debug(res)
+    except subprocess.CalledProcessError as ex:
+        logging.debug(ex.cmd)
+        logging.debug(ex.output)
+        logging.debug(ex.stderr)
+        logging.debug(ex.stdout)
+    # echo = subprocess.Popen(['echo', '-n', aprs_string], stdout=subprocess.PIPE)
+    # gen_packets = subprocess.Popen([f"{DIREWOLF_HOME}/gen_packets", '-a', '25', '-o', wav_path, '-'], stdin=echo.stdout)
+    # echo.stdout.close()
+    # gen_packets.communicate()
     if not os.path.exists(wav_path):
         raise RuntimeError('Could not generate wave file')

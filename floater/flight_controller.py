@@ -66,9 +66,31 @@ def capture_video(state):
     state.last_video_time = time.time()
     state.last_video_path = video_path
 
-def send_aprs(state):
-    aprs_string = aprs.make_direwolf_string(state, 'APN25', ['WIDE1-1'], datetime.utcnow())
-    logging.info(f'APRSing {{{aprs_string}}}')
+def send_aprs(state, aprs_dst='APN25', digis=['WIDE1-1']):
+    gpio.enable_vhf()
+    now = datetime.utcnow()
+    try:
+        aprs_string = aprs.make_direwolf_string(state, aprs_dst, digis, now)
+    except:
+        traceback.print_exc()
+        logging.error('Not sending APRS')
+        return
+
+    wav_path = '/tmp/aprs.wav'
+    aprs.make_wav(aprs_string, wav_path)
+
+    if not dra818.program(frequency=146.500):
+        logging.error("Problem programming")
+        sys.exit(1)
+    logging.info(f'Sending APRS: {{{aprs_string}}}')
+    # dra818.ptt(True)
+    try:
+        time.sleep(0.25)
+        dra818.play_file(wav_path)
+        time.sleep(0.25)
+    except:
+        traceback.print_exc()
+    dra818.ptt(False)
 
 
 def send_sstv(state):
@@ -110,8 +132,8 @@ def main(args):
             if state.is_valid():
                 send_aprs(state)
             else:
-                logging.warn("Invalid state. Will not APRS")
-                logging.warn(f'{repr(state)}')
+                logging.warning("Invalid state. Will not APRS")
+                logging.warning(f'{repr(state)}')
             logging.info('beacon sent')
             capture_photo(state)
             if state.will_send_sstv:

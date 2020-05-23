@@ -15,12 +15,13 @@ Some of the code works.
 - [x] stream gps data
 - [x] get serious about some tests and project structure.
 - [x] convert gps data into state
-- [ ] figure out correct APRS destination and digis.
+- [x] figure out correct APRS destination and digis.
 - [ ] generate APRS telemetry messages.
 - [x] generate APRS wav
 - [x] collect gps to object
 - [x] collect temperatures to object (wire in 18b20)
-- [ ] send APRS wav
+- [x] send APRS wav
+- [ ] physically connect sound to radio.
 - [x] capture image
 - [x] image to wav
 - [ ] send image as sstv
