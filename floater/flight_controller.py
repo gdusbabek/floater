@@ -83,7 +83,7 @@ def send_aprs(state, aprs_dst='APN25', digis=['WIDE1-1']):
         logging.error("Problem programming")
         sys.exit(1)
     logging.info(f'Sending APRS: {{{aprs_string}}}')
-    # dra818.ptt(True)
+    dra818.ptt(True)
     try:
         time.sleep(0.25)
         dra818.play_file(wav_path)

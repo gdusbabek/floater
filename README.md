@@ -21,9 +21,10 @@ Some of the code works.
 - [x] collect gps to object
 - [x] collect temperatures to object (wire in 18b20)
 - [x] send APRS wav
-- [ ] physically connect sound to radio.
+- [x] physically connect sound to radio.
 - [x] capture image
 - [x] image to wav
+- [ ] create sstv reception station.
 - [ ] send image as sstv
 - [ ] preflight check for devices.
 - [ ] video capture is not happening according to schedule.
